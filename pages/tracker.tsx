@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { format, subDays } from 'date-fns';
 import Link from 'next/link';
 
-const initialHabits = [
+const defaultHabits = [
   'Не брать телефон в руки после 22:00',
   'Отключать уведомления во время фокусной работы',
   'Ограничивать соцсети до 30 минут в день',
@@ -10,7 +10,7 @@ const initialHabits = [
 ];
 
 export default function Tracker() {
-  const [habits, setHabits] = useState<string[]>(initialHabits);
+  const [habits, setHabits] = useState<string[]>([]);
   const [newHabit, setNewHabit] = useState('');
   const [showInput, setShowInput] = useState(false);
   const [progress, setProgress] = useState<Record<string, Record<string, boolean>>>({});
@@ -19,6 +19,34 @@ export default function Tracker() {
   const dates = Array.from({ length: 14 }, (_, i) =>
     format(subDays(today, 13 - i), 'dd.MM')
   );
+
+  // Загрузка при монтировании
+  useEffect(() => {
+    try {
+      const storedHabits = localStorage.getItem('habits');
+      const parsedHabits = storedHabits ? JSON.parse(storedHabits) : null;
+      setHabits(Array.isArray(parsedHabits) && parsedHabits.length > 0 ? parsedHabits : defaultHabits);
+    } catch {
+      setHabits(defaultHabits);
+    }
+
+    try {
+      const storedProgress = localStorage.getItem('habitProgress');
+      setProgress(storedProgress ? JSON.parse(storedProgress) : {});
+    } catch {
+      setProgress({});
+    }
+  }, []);
+
+  // Сохранение прогресса
+  useEffect(() => {
+    localStorage.setItem('habitProgress', JSON.stringify(progress));
+  }, [progress]);
+
+  // Сохранение привычек
+  useEffect(() => {
+    localStorage.setItem('habits', JSON.stringify(habits));
+  }, [habits]);
 
   const toggleProgress = (habit: string, date: string) => {
     setProgress((prev) => ({
@@ -52,7 +80,9 @@ export default function Tracker() {
       <div className="bg-white rounded-2xl shadow-md p-6 w-full max-w-6xl overflow-x-auto">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-semibold text-gray-800">Трекер привычек</h2>
-          <Link href="/dashboard" className="text-blue-600 hover:underline text-sm">Вернуться в личный кабинет</Link>
+          <Link href="/dashboard" className="text-blue-600 hover:underline text-sm">
+            Вернуться в личный кабинет
+          </Link>
         </div>
 
         <table className="min-w-full border-collapse">
@@ -62,7 +92,9 @@ export default function Tracker() {
               {dates.map((date, index) => (
                 <th
                   key={date}
-                  className={`px-2 py-2 text-sm text-gray-600 border-b whitespace-nowrap ${index >= 7 ? 'hidden sm:table-cell' : ''}`}
+                  className={`px-2 py-2 text-sm text-gray-600 border-b whitespace-nowrap ${
+                    index >= 7 ? 'hidden sm:table-cell' : ''
+                  }`}
                 >
                   {date}
                 </th>
@@ -77,7 +109,9 @@ export default function Tracker() {
                 {dates.map((date, index) => (
                   <td
                     key={date}
-                    className={`text-center border-b cursor-pointer hover:bg-sky-100 ${index >= 7 ? 'hidden sm:table-cell' : ''}`}
+                    className={`text-center border-b cursor-pointer hover:bg-sky-100 ${
+                      index >= 7 ? 'hidden sm:table-cell' : ''
+                    }`}
                     onClick={() => toggleProgress(habit, date)}
                   >
                     {progress[habit]?.[date] ? '✅' : '⬜'}

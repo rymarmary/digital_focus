@@ -1,6 +1,7 @@
 import "@/styles/globals.css";
 import type { AppProps } from "next/app";
 import Head from "next/head";
+import FeedbackWidget from "@/components/FeedbackWidget";
 
 export default function App({ Component, pageProps }: AppProps) {
   return (
@@ -10,6 +11,7 @@ export default function App({ Component, pageProps }: AppProps) {
         <title>Digital Focus</title>
       </Head>
       <Component {...pageProps} />
+      <FeedbackWidget /> {/* <-- Добавлено сюда */}
     </>
   );
 }
