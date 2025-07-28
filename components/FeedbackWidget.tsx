@@ -8,9 +8,9 @@ export default function FeedbackWidget() {
       {/* Floating button */}
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-full shadow-lg z-50 hover:bg-blue-700 transition sm:text-sm text-base"
+        className="fixed bottom-20 right-4 bg-blue-600 text-white px-4 py-2 rounded-full shadow-lg z-50 hover:bg-blue-700 transition sm:text-sm text-base"
       >
-        💬 Обратная связь
+      💬 Обратная связь
       </button>
 
       {/* Overlay form */}

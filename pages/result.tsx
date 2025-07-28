@@ -1,9 +1,12 @@
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
+import { supabase } from '@/utils/supabaseClient';
+import { Session } from '@supabase/supabase-js';
 
 export default function ResultPage() {
   const router = useRouter();
   const [score, setScore] = useState<number | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
 
   useEffect(() => {
     if (router.query.score) {
@@ -11,6 +14,14 @@ export default function ResultPage() {
       setScore(parsed);
     }
   }, [router.query.score]);
+
+  useEffect(() => {
+    const getSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      setSession(data.session);
+    };
+    getSession();
+  }, []);
 
   if (score === null) return null;
 
@@ -23,11 +34,26 @@ export default function ResultPage() {
     message = 'Похоже, цифровая нагрузка влияет на твоё состояние. Стоит пересмотреть свои привычки.';
   }
 
-  const handleSaveAndGoToDashboard = () => {
-    const history = JSON.parse(localStorage.getItem('testHistory') || '[]');
-    const updated = [...history, { score, date: new Date().toISOString() }];
-    localStorage.setItem('testHistory', JSON.stringify(updated));
-    router.push('/dashboard');
+  const handleSaveAndGoToDashboard = async () => {
+    if (!session?.user) {
+      alert('Необходимо войти в аккаунт');
+      router.push('/login');
+      return;
+    }
+
+    const { error } = await supabase.from('results').insert([
+      {
+        user_id: session.user.id,
+        score,
+      },
+    ]);
+
+    if (error) {
+      console.error('Ошибка сохранения результата:', error.message);
+      alert('Ошибка сохранения. Попробуйте ещё раз.');
+    } else {
+      router.push('/dashboard');
+    }
   };
 
   const handleGoToRecommendations = () => {

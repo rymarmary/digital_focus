@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
+import { supabase } from '@/utils/supabaseClient';
+import { Session } from '@supabase/supabase-js';
 
 type TestResult = {
   score: number;
@@ -8,27 +10,57 @@ type TestResult = {
 
 export default function Dashboard() {
   const [history, setHistory] = useState<TestResult[]>([]);
+  const [session, setSession] = useState<Session | null>(null);
   const router = useRouter();
+  const [name, setName] = useState('');
+  const [editingName, setEditingName] = useState(false);
 
-  const user = {
-    name: 'Анонимный пользователь',
-    email: 'anon@example.com',
-  };
 
   useEffect(() => {
-    const saved = localStorage.getItem('testHistory');
-    if (saved) {
-      try {
-        const parsed: TestResult[] = JSON.parse(saved);
-        setHistory(parsed);
-      } catch (e) {
-        console.error('Ошибка чтения истории:', e);
-        setHistory([]);
-      }
-    }
-  }, []);
+    const getSession = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      setSession(session);
 
-  const latest = history.length > 0 ? history[history.length - 1] : null;
+      if (session?.user?.user_metadata?.name) {
+        setName(session.user.user_metadata.name);
+    }
+
+
+      if (!session) {
+        router.push('/auth/signin')
+      }
+    };
+
+    getSession();
+  }, [router]);
+
+  useEffect(() => {
+    const fetchHistory = async () => {
+      if (!session?.user) return;
+
+      const { data, error } = await supabase
+        .from('results')
+        .select('score, created_at')
+        .eq('user_id', session.user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Ошибка загрузки истории:', error);
+      } else {
+        const formatted = data.map((item) => ({
+          score: item.score,
+          date: item.created_at,
+        }));
+        setHistory(formatted);
+      }
+    };
+
+    fetchHistory();
+  }, [session]);
+
+  const latest = history[0];
 
   let message = '';
   if (latest) {
@@ -41,20 +73,76 @@ export default function Dashboard() {
     }
   }
 
+  const handleSaveName = async () => {
+  if (!session) return;
+
+  const { error } = await supabase.auth.updateUser({
+    data: { name },
+  });
+
+  if (error) {
+    console.error('Ошибка обновления имени:', error.message);
+    alert('Ошибка при сохранении имени.');
+  } else {
+    alert('Имя успешно обновлено!');
+    setEditingName(false);
+  }
+  };
+
   return (
     <main className="bg-sky-100 min-h-screen flex items-center justify-center p-6">
       <div className="bg-white rounded-3xl shadow-xl p-8 w-full max-w-3xl space-y-6">
         <h1 className="text-3xl font-bold text-gray-800 text-center">Личный кабинет</h1>
 
         {/* Инфо о пользователе */}
-        <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm text-gray-600 flex flex-col sm:flex-row sm:justify-between sm:items-center">
-          <p><strong>Имя:</strong> {user.name}</p>
-          <p><strong>Email:</strong> {user.email}</p>
-        </div>
+        {session && (
+          <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm text-gray-600 space-y-2">
+  <div className="flex items-center gap-2">
+    <strong>Имя:</strong>
+    {editingName ? (
+      <>
+        <input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className="border px-2 py-1 rounded text-sm"
+        />
+        <button
+          onClick={handleSaveName}
+          className="text-blue-600 hover:underline text-sm"
+        >
+          Сохранить
+        </button>
+        <button
+          onClick={() => {
+            setName(session?.user.user_metadata?.name || '');
+            setEditingName(false);
+          }}
+          className="text-gray-500 hover:underline text-sm"
+        >
+          Отмена
+        </button>
+      </>
+    ) : (
+      <>
+        <span>{name || 'Пользователь'}</span>
+        <button
+          onClick={() => setEditingName(true)}
+          className="text-blue-600 hover:underline text-sm"
+        >
+          ✏️ Изменить
+        </button>
+      </>
+    )}
+    </div>
+      <p>
+        <strong>Email:</strong> {session?.user.email}
+      </p>
+    </div>
+
+        )}
 
         {latest ? (
           <>
-            {/* Последний результат */}
             <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 text-gray-700">
               <p className="text-xl font-semibold">
                 Последний результат: <span className="text-blue-600">{latest.score}</span>
@@ -62,24 +150,19 @@ export default function Dashboard() {
               <p className="mt-2 text-base">{message}</p>
             </div>
 
-            {/* История прохождений */}
             {history.length > 1 && (
               <div className="bg-yellow-50 border border-yellow-200 text-gray-800 rounded-xl p-6">
                 <p className="text-gray-800 font-medium mb-2">История прохождения:</p>
                 <ul className="text-sm text-gray-600 list-disc list-inside space-y-1">
-                  {history
-                    .slice(0, -1)
-                    .reverse()
-                    .map((item, i) => (
-                      <li key={i}>
-                        {new Date(item.date).toLocaleDateString()} — балл: {item.score}
-                      </li>
-                    ))}
+                  {history.slice(1).map((item, i) => (
+                    <li key={i}>
+                      {new Date(item.date).toLocaleDateString()} — балл: {item.score}
+                    </li>
+                  ))}
                 </ul>
               </div>
             )}
 
-            {/* Кнопки */}
             <div className="flex flex-col sm:flex-row sm:justify-between gap-4">
               <button
                 onClick={() => router.push(`/recommendations?score=${latest.score}`)}

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { format, subDays } from 'date-fns';
 import Link from 'next/link';
+import { supabase } from '@/utils/supabaseClient';
 
 const defaultHabits = [
   'Не брать телефон в руки после 22:00',
@@ -11,68 +12,123 @@ const defaultHabits = [
 
 export default function Tracker() {
   const [habits, setHabits] = useState<string[]>([]);
+  const [progress, setProgress] = useState<Record<string, Record<string, boolean>>>({});
   const [newHabit, setNewHabit] = useState('');
   const [showInput, setShowInput] = useState(false);
-  const [progress, setProgress] = useState<Record<string, Record<string, boolean>>>({});
+  const [userId, setUserId] = useState<string | null>(null);
 
   const today = new Date();
   const dates = Array.from({ length: 14 }, (_, i) =>
     format(subDays(today, 13 - i), 'dd.MM')
   );
 
-  // Загрузка при монтировании
   useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        setUserId(session.user.id);
+        loadFromDB(session.user.id);
+      } else {
+        loadFromLocal();
+      }
+    });
+  }, []);
+
+  const loadFromLocal = () => {
     try {
-      const storedHabits = localStorage.getItem('habits');
-      const parsedHabits = storedHabits ? JSON.parse(storedHabits) : null;
-      setHabits(Array.isArray(parsedHabits) && parsedHabits.length > 0 ? parsedHabits : defaultHabits);
+      const storedHabits = JSON.parse(localStorage.getItem('habits') || '[]');
+      setHabits(storedHabits.length ? storedHabits : defaultHabits);
+
+      const storedProgress = JSON.parse(localStorage.getItem('habitProgress') || '{}');
+      setProgress(storedProgress);
     } catch {
+      setHabits(defaultHabits);
+      setProgress({});
+    }
+  };
+
+  const loadFromDB = async (userId: string) => {
+    const { data: habitsData } = await supabase
+      .from('habits')
+      .select('name')
+      .eq('user_id', userId);
+
+    if (habitsData && habitsData.length > 0) {
+      setHabits(habitsData.map((h) => h.name));
+    } else {
+      // Сохраняем дефолтные привычки в Supabase
+      await supabase.from('habits').insert(defaultHabits.map((h) => ({ name: h, user_id: userId })));
       setHabits(defaultHabits);
     }
 
-    try {
-      const storedProgress = localStorage.getItem('habitProgress');
-      setProgress(storedProgress ? JSON.parse(storedProgress) : {});
-    } catch {
-      setProgress({});
+    const { data: progressData } = await supabase
+      .from('progress')
+      .select('habit, date, value')
+      .eq('user_id', userId);
+
+    const mapped: Record<string, Record<string, boolean>> = {};
+    progressData?.forEach(({ habit, date, value }) => {
+      if (!mapped[habit]) mapped[habit] = {};
+      mapped[habit][date] = value;
+    });
+
+    setProgress(mapped);
+  };
+
+  useEffect(() => {
+    if (!userId) {
+      localStorage.setItem('habits', JSON.stringify(habits));
     }
-  }, []);
+  }, [habits, userId]);
 
-  // Сохранение прогресса
   useEffect(() => {
-    localStorage.setItem('habitProgress', JSON.stringify(progress));
-  }, [progress]);
+    if (!userId) {
+      localStorage.setItem('habitProgress', JSON.stringify(progress));
+    }
+  }, [progress, userId]);
 
-  // Сохранение привычек
-  useEffect(() => {
-    localStorage.setItem('habits', JSON.stringify(habits));
-  }, [habits]);
+  const toggleProgress = async (habit: string, date: string) => {
+    const newValue = !progress[habit]?.[date];
 
-  const toggleProgress = (habit: string, date: string) => {
     setProgress((prev) => ({
       ...prev,
       [habit]: {
         ...prev[habit],
-        [date]: !prev[habit]?.[date],
+        [date]: newValue,
       },
     }));
-  };
 
-  const handleAddHabit = () => {
-    if (newHabit.trim()) {
-      setHabits((prev) => [...prev, newHabit.trim()]);
-      setNewHabit('');
-      setShowInput(false);
+    if (userId) {
+      await supabase
+        .from('progress')
+        .upsert({ user_id: userId, habit, date, value: newValue });
     }
   };
 
-  const handleDeleteHabit = (habitToDelete: string) => {
+  const handleAddHabit = async () => {
+    if (!newHabit.trim()) return;
+    const trimmed = newHabit.trim();
+
+    setHabits((prev) => [...prev, trimmed]);
+    setNewHabit('');
+    setShowInput(false);
+
+    if (userId) {
+      await supabase.from('habits').insert({ user_id: userId, name: trimmed });
+    }
+  };
+
+  const handleDeleteHabit = async (habitToDelete: string) => {
     setHabits((prev) => prev.filter((habit) => habit !== habitToDelete));
     setProgress((prev) => {
       const newProgress = { ...prev };
       delete newProgress[habitToDelete];
       return newProgress;
     });
+
+    if (userId) {
+      await supabase.from('habits').delete().eq('user_id', userId).eq('name', habitToDelete);
+      await supabase.from('progress').delete().eq('user_id', userId).eq('habit', habitToDelete);
+    }
   };
 
   return (
@@ -92,9 +148,7 @@ export default function Tracker() {
               {dates.map((date, index) => (
                 <th
                   key={date}
-                  className={`px-2 py-2 text-sm text-gray-600 border-b whitespace-nowrap ${
-                    index >= 7 ? 'hidden sm:table-cell' : ''
-                  }`}
+                  className={`px-2 py-2 text-sm text-gray-600 border-b whitespace-nowrap ${index >= 7 ? 'hidden sm:table-cell' : ''}`}
                 >
                   {date}
                 </th>
@@ -109,9 +163,7 @@ export default function Tracker() {
                 {dates.map((date, index) => (
                   <td
                     key={date}
-                    className={`text-center border-b cursor-pointer hover:bg-sky-100 ${
-                      index >= 7 ? 'hidden sm:table-cell' : ''
-                    }`}
+                    className={`text-center border-b cursor-pointer hover:bg-sky-100 ${index >= 7 ? 'hidden sm:table-cell' : ''}`}
                     onClick={() => toggleProgress(habit, date)}
                   >
                     {progress[habit]?.[date] ? '✅' : '⬜'}
