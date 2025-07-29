@@ -1,1 +1,37 @@
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Next.js build
+.next/
+out/
+dist/
+
+# Local env
+.env*
+!.env.example
+
+# Vercel
+.vercel
+
+# Supabase
+supabase/.temp/
+.supabase/
+
+# Logs
+*.log
+logs/
+*.sqlite
+
+# IDE/editor
+.vscode/
+.idea/
+*.sw?
 .DS_Store
+
+# OS
+Thumbs.db
+ehthumbs.db
