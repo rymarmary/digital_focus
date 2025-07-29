@@ -23,36 +23,36 @@ export default function Home() {
           Добро пожаловать в Digital Focus
         </h1>
 
-        <p className="text-gray-700 text-lg sm:text-xl">
-          Пройди короткий тест и узнай, как цифровая нагрузка влияет на твоё
-          состояние. Получи рекомендации, адаптированные под твой стиль жизни.
+        <p className="text-gray-700 text-lg sm:text-xl leading-relaxed">
+          Пройди короткий тест и узнай, как цифровая нагрузка влияет на твоё состояние. Получи рекомендации, адаптированные под твой стиль жизни.
         </p>
 
-        <p className="text-gray-600 text-base sm:text-lg">
-          После прохождения ты сможешь:
-        </p>
-        <ul className="text-left text-gray-700 space-y-2 list-disc list-inside text-base sm:text-lg">
-          <li>получить персональные советы по цифровому балансу,</li>
-          <li>оставить обратную связь на почту,</li>
-          <li>вести трекер привычек,</li>
-          <li>сохранить результат и вернуться позже в личный кабинет.</li>
-        </ul>
+        {/* Новый блок в стандартном шрифте */}
+        <div className="text-left text-gray-700 space-y-3 text-base sm:text-lg leading-relaxed">
+          <p className="font-medium text-center sm:text-left">
+            После прохождения ты сможешь:
+          </p>
+          <ul className="list-disc list-inside space-y-1">
+            <li>получить персональные советы по цифровому балансу,</li>
+            <li>оставить обратную связь на почту,</li>
+            <li>вести трекер привычек,</li>
+            <li>сохранить результат и вернуться позже в личный кабинет.</li>
+          </ul>
+        </div>
 
         <div className="flex flex-col sm:flex-row justify-center gap-4 pt-6">
-          <div className="flex flex-col sm:flex-row justify-center gap-4 mt-6">
           <button
             onClick={() => router.push('/quiz')}
             className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-8 rounded-xl text-lg transition cursor-pointer"
-            >
+          >
             Начать тест
           </button>
           <button
             onClick={() => router.push('/dashboard')}
             className="bg-white border border-blue-500 text-blue-500 hover:bg-blue-50 font-medium py-3 px-8 rounded-xl text-lg transition cursor-pointer"
-            >
+          >
             Личный кабинет
           </button>
-        </div>
         </div>
       </div>
     </div>

@@ -46,24 +46,38 @@ export default function Tracker() {
     }
   };
 
-  const loadFromDB = async (userId: string) => {
-    const { data: habitsData } = await supabase
+  const loadFromDB = async (uid: string) => {
+    const { data: habitsData, error: habitsError } = await supabase
       .from('habits')
       .select('name')
-      .eq('user_id', userId);
+      .eq('user_id', uid);
 
-    if (habitsData && habitsData.length > 0) {
-      setHabits(habitsData.map((h) => h.name));
-    } else {
-      // Сохраняем дефолтные привычки в Supabase
-      await supabase.from('habits').insert(defaultHabits.map((h) => ({ name: h, user_id: userId })));
-      setHabits(defaultHabits);
+    if (habitsError) {
+      console.error('Ошибка загрузки привычек:', habitsError);
+      return;
     }
 
-    const { data: progressData } = await supabase
+    const habitNames = habitsData?.map((h) => h.name) || [];
+
+    // Удалим дубликаты
+    const uniqueHabits = [...new Set(habitNames)];
+
+    if (uniqueHabits.length === 0) {
+      await supabase.from('habits').insert(defaultHabits.map((h) => ({ name: h, user_id: uid })));
+      setHabits(defaultHabits);
+    } else {
+      setHabits(uniqueHabits);
+    }
+
+    const { data: progressData, error: progressError } = await supabase
       .from('progress')
       .select('habit, date, value')
-      .eq('user_id', userId);
+      .eq('user_id', uid);
+
+    if (progressError) {
+      console.error('Ошибка загрузки прогресса:', progressError);
+      return;
+    }
 
     const mapped: Record<string, Record<string, boolean>> = {};
     progressData?.forEach(({ habit, date, value }) => {
@@ -107,6 +121,9 @@ export default function Tracker() {
   const handleAddHabit = async () => {
     if (!newHabit.trim()) return;
     const trimmed = newHabit.trim();
+
+    // Предотвращаем дубли
+    if (habits.includes(trimmed)) return;
 
     setHabits((prev) => [...prev, trimmed]);
     setNewHabit('');
