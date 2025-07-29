@@ -25,7 +25,7 @@ export default function FeedbackWidget() {
             </button>
             <h3 className="text-lg font-semibold mb-2 text-gray-800">Обратная связь</h3>
             <form
-              action="https://formsubmit.co/marya.analyst@gmail.com"
+              action="https://formsubmit.co/el/vovabe"
               method="POST"
             >
               <input type="hidden" name="_captcha" value="false" />
