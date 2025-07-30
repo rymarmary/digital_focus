@@ -3,8 +3,6 @@
 A web application to assess digital overload and build mindful tech habits.  
 **Diploma project by Mary Rymar (2025–2026)**
 
----
-
 ## Overview
 
 The app allows users to:
@@ -16,8 +14,6 @@ The app allows users to:
 - View test results and history
 - Send feedback from any page
 
----
-
 ## Tech Stack
 
 - **Next.js** – React framework
@@ -27,8 +23,6 @@ The app allows users to:
 - **FormSubmit** – Lightweight external form handling
 - **React Hooks** – State and effect management
 - **date-fns** – Date manipulation
-
----
 
 ## Features
 
@@ -41,15 +35,11 @@ The app allows users to:
 | Dashboard         | Editable name, email, last result, test history, access to tracker          |
 | Feedback Form     | Sends feedback to the developer’s email using FormSubmit                    |
 
----
-
 ## Auth & Account
 
 - Sign up and login via Supabase
 - Protected dashboard
 - Editable display name
-
----
 
 ## Getting Started
 
@@ -57,8 +47,6 @@ The app allows users to:
 npm install
 npm run dev
 ```
-
----
 
 ## License
 
