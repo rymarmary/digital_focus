@@ -16,7 +16,7 @@ export default function Home() {
 
   return (
     <div
-      className={`${geistSans.className} ${geistMono.className} font-sans flex flex-col items-center justify-center min-h-screen bg-sky-100 p-6`}
+      className={`${geistSans.className} ${geistMono.className} font-sans flex flex-col items-center justify-center min-h-screen bg-sky-100 p-6 pb-20`}
     >
       <div className="bg-white rounded-2xl shadow-lg p-10 sm:p-12 max-w-2xl w-full text-center space-y-6">
         <h1 className="text-3xl sm:text-4xl font-bold text-gray-800">
