@@ -1,7 +1,7 @@
 # Digital Focus – Diploma Project
 
 A web application to assess digital overload and build mindful tech habits.  
-**Diploma project by Mary Rymar (2025–2026)**
+**Diploma project by Mary Rymar (2025–2026): https://digital-focus.vercel.app/index**
 
 ## Overview
 
