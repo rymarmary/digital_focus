@@ -13,7 +13,6 @@ export default function FeedbackWidget() {
       💬 Обратная связь
       </button>
 
-      {/* Overlay form */}
       {open && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
           <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-md mx-4 relative">
@@ -33,7 +32,7 @@ export default function FeedbackWidget() {
                 name="message"
                 required
                 placeholder="Напишите ваш отзыв..."
-                className="w-full h-32 border rounded p-2 mb-4 text-sm"
+                className="w-full h-32 border rounded p-2 mb-4 text-sm text-black placeholder-gray-500 bg-white focus:outline-none focus:ring-2 focus:ring-blue-400"
               ></textarea>
               <button
                 type="submit"

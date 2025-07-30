@@ -18,7 +18,14 @@ export default function SignUp() {
     e.preventDefault();
     setError('');
 
-    const { error } = await supabase.auth.signUp({ email, password });
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+      emailRedirectTo: 'https://digital-focus.vercel.app/auth/confirmed',
+    },
+  });
+
 
     if (error) setError(error.message);
     else {
