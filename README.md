@@ -51,5 +51,4 @@ npm run dev
 ## License
 
 This project was created as part of a diploma and is intended for educational and non-commercial purposes only.
-
 No commercial use, distribution, or resale is allowed without permission from the author.
