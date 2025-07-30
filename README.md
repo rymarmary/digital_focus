@@ -1,56 +1,66 @@
-# 🎓 Diploma Project | Digital Focus
+# Digital Focus – Diploma Project
 
-Веб-приложение для оценки уровня цифровой перегрузки и формирования цифрово-осознанных привычек.  
-**Rymar Mary’s Diploma Project (2025–2026)**
-
----
-
-## 🔍 Описание
-
-Приложение позволяет:
-- Пройти квиз и узнать уровень цифровой перегрузки
-- Получить индивидуальные рекомендации
-- Вести трекер полезных привычек с сохранением прогресса
-- Регистрироваться, входить и управлять личными данными (email и имя)
-- Просматривать результаты тестов и их историю
-- Оставлять обратную связь с любой страницы
+A web application to assess digital overload and build mindful tech habits.  
+**Diploma project by Mary Rymar (2025–2026)**
 
 ---
 
-## 🧰 Стек технологий
+## Overview
 
-- **Next.js** — фреймворк на базе React
-- **TypeScript** — строгая типизация
-- **Tailwind CSS** — удобная и быстрая стилизация
-- **Supabase** — авторизация и хранение данных
-- **React Hooks** — управление состоянием
-- **date-fns** — работа с датами
+The app allows users to:
 
----
-
-## 🧪 Возможности
-
-| Раздел              | Функциональность                                                                 |
-|---------------------|----------------------------------------------------------------------------------|
-| 🏠 Главная страница  | Краткое описание, кнопки перехода                                               |
-| 🧠 Квиз              | 8 вопросов с подсчётом баллов и оценкой уровня цифровой нагрузки                |
-| 📊 Результаты        | Описание уровня, кнопки: сохранить результат и перейти к рекомендациям          |
-| ✅ Трекер привычек   | Таблица на 14 дней, добавление/удаление привычек, сохранение прогресса в БД     |
-| 👤 Личный кабинет    | Имя (редактируемое), email, последний результат, история тестов, переход к трекеру |
-| 📩 Обратная связь    | Форма, отправляющая письмо на email разработчика                                |
+- Take a short quiz to measure digital stress
+- Receive personalized recommendations
+- Track daily habits and monitor progress
+- Register and manage account (email and name)
+- View test results and history
+- Send feedback from any page
 
 ---
 
-## 🔐 Авторизация
+## Tech Stack
 
-- Реализована регистрация и вход через Supabase
-- Защищённый личный кабинет
-- Возможность изменить имя пользователя
+- **Next.js** – React framework
+- **TypeScript** – Static typing
+- **Tailwind CSS** – Utility-first styling
+- **Supabase** – Auth and database
+- **FormSubmit** – Lightweight external form handling
+- **React Hooks** – State and effect management
+- **date-fns** – Date manipulation
 
 ---
 
-## 🚀 Запуск проекта
+## Features
+
+| Section           | Description                                                                 |
+|-------------------|-----------------------------------------------------------------------------|
+| Home              | Intro text with buttons to start the quiz or access the dashboard           |
+| Quiz              | 8 questions with a scoring system to evaluate digital overload              |
+| Results           | Score feedback, save option, link to personalized recommendations           |
+| Habit Tracker     | 14-day grid to add/remove habits and save to the database                   |
+| Dashboard         | Editable name, email, last result, test history, access to tracker          |
+| Feedback Form     | Sends feedback to the developer’s email using FormSubmit                    |
+
+---
+
+## Auth & Account
+
+- Sign up and login via Supabase
+- Protected dashboard
+- Editable display name
+
+---
+
+## Getting Started
 
 ```bash
 npm install
 npm run dev
+```
+
+---
+
+## License
+
+This project was created as part of a diploma and is intended for educational and non-commercial purposes only.
+No commercial use, distribution, or resale is allowed without permission from the author.
