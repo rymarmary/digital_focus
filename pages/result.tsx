@@ -7,6 +7,7 @@ export default function ResultPage() {
   const router = useRouter();
   const [score, setScore] = useState<number | null>(null);
   const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (router.query.score) {
@@ -16,31 +17,28 @@ export default function ResultPage() {
   }, [router.query.score]);
 
   useEffect(() => {
-    const getSession = async () => {
-      const { data } = await supabase.auth.getSession();
+    supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
-    };
-    getSession();
+    });
   }, []);
 
   if (score === null) return null;
 
-  let message = '';
-  if (score <= 5) {
-    message = 'Отлично! Ты осознанно используешь технологии и умеешь сохранять баланс.';
-  } else if (score <= 10) {
-    message = 'Ты на правильном пути, но иногда стоит обращать внимание на цифровые привычки.';
-  } else {
-    message = 'Похоже, цифровая нагрузка влияет на твоё состояние. Стоит пересмотреть свои привычки.';
-  }
+  const message =
+    score <= 5
+      ? 'Отлично! Ты осознанно используешь технологии и умеешь сохранять баланс.'
+      : score <= 10
+      ? 'Ты на правильном пути, но иногда стоит обращать внимание на цифровые привычки.'
+      : 'Похоже, цифровая нагрузка влияет на твоё состояние. Стоит пересмотреть свои привычки.';
 
   const handleSaveAndGoToDashboard = async () => {
     if (!session?.user) {
-      alert('Необходимо войти в аккаунт');
-      router.push('/login');
+      alert('Сначала войдите в аккаунт, чтобы сохранить результат');
+      router.push('/auth/signin');
       return;
     }
 
+    setLoading(true);
     const { error } = await supabase.from('results').insert([
       {
         user_id: session.user.id,
@@ -48,9 +46,11 @@ export default function ResultPage() {
       },
     ]);
 
+    setLoading(false);
+
     if (error) {
-      console.error('Ошибка сохранения результата:', error.message);
-      alert('Ошибка сохранения. Попробуйте ещё раз.');
+      console.error('Ошибка при сохранении:', error.message);
+      alert('Не удалось сохранить результат. Попробуйте позже.');
     } else {
       router.push('/dashboard');
     }
@@ -75,9 +75,12 @@ export default function ResultPage() {
         <div className="flex flex-col sm:flex-row justify-center gap-4 pt-4">
           <button
             onClick={handleSaveAndGoToDashboard}
-            className="bg-white border border-blue-500 text-blue-500 hover:bg-blue-50 font-medium py-2 px-6 rounded-lg transition cursor-pointer"
+            disabled={loading}
+            className={`bg-white border border-blue-500 text-blue-500 hover:bg-blue-50 font-medium py-2 px-6 rounded-lg transition cursor-pointer ${
+              loading ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
           >
-            Сохранить результат в личный кабинет
+            {loading ? 'Сохраняем...' : 'Сохранить результат в личный кабинет'}
           </button>
 
           <button
