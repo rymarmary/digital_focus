@@ -92,8 +92,12 @@ export default function Dashboard() {
 
   // === Экспорт отчёта в PDF ===
   const handleExportPDF = async () => {
+    console.log("🚀 Экспорт PDF запущен");
     const element = document.getElementById('report-section');
-    if (!element) return;
+    if (!element) {
+      console.warn("⚠️ Элемент #report-section не найден");
+    return;
+    }
     const canvas = await html2canvas(element);
     const imgData = canvas.toDataURL('image/png');
     const pdf = new jsPDF({ unit: 'pt', format: 'a4' });
