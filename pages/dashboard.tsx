@@ -18,25 +18,23 @@ export default function Dashboard() {
   const [name, setName] = useState('');
   const [editingName, setEditingName] = useState(false);
 
+  // === Получение сессии ===
   useEffect(() => {
     const getSession = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      setSession(session);
+      const { data } = await supabase.auth.getSession();
+      const currentSession = data.session;
+      setSession(currentSession);
 
-      if (session?.user?.user_metadata?.name) {
-        setName(session.user.user_metadata.name);
-      }
-
-      if (!session) {
+      if (!currentSession) {
         router.push('/auth/signin');
+      } else if (currentSession.user?.user_metadata?.name) {
+        setName(currentSession.user.user_metadata.name);
       }
     };
-
     getSession();
   }, [router]);
 
+  // === Загрузка истории результатов ===
   useEffect(() => {
     const fetchHistory = async () => {
       if (!session?.user) return;
@@ -49,20 +47,21 @@ export default function Dashboard() {
 
       if (error) {
         console.error('Ошибка загрузки истории:', error);
-      } else {
-        const formatted = data.map((item) => ({
-          score: item.score,
-          date: item.created_at,
-        }));
-        setHistory(formatted);
+      } else if (data) {
+        setHistory(
+          data.map((item) => ({
+            score: item.score,
+            date: item.created_at,
+          }))
+        );
       }
     };
-
     fetchHistory();
   }, [session]);
 
   const latest = history[0];
 
+  // === Сообщение по уровню нагрузки ===
   let message = '';
   if (latest) {
     if (latest.score <= 5) {
@@ -74,13 +73,11 @@ export default function Dashboard() {
     }
   }
 
+  // === Сохранение имени ===
   const handleSaveName = async () => {
     if (!session) return;
 
-    const { error } = await supabase.auth.updateUser({
-      data: { name },
-    });
-
+    const { error } = await supabase.auth.updateUser({ data: { name } });
     if (error) {
       console.error('Ошибка обновления имени:', error.message);
       alert('Ошибка при сохранении имени.');
@@ -101,6 +98,24 @@ export default function Dashboard() {
     }
 
     try {
+      // Подмена oklch цветов на HEX
+      document.querySelectorAll('*').forEach((el) => {
+        const style = window.getComputedStyle(el);
+        if (style.backgroundColor.includes('oklch')) {
+          (el as HTMLElement).style.backgroundColor = '#E0F2FE';
+        }
+        if (style.color.includes('oklch')) {
+          (el as HTMLElement).style.color = '#1E3A8A';
+        }
+        if (style.borderColor.includes('oklch')) {
+          (el as HTMLElement).style.borderColor = '#93C5FD';
+        }
+      });
+
+      // Скрываем кнопки при экспорте
+      const hiddenButtons = document.querySelectorAll('.no-export');
+      hiddenButtons.forEach((btn) => ((btn as HTMLElement).style.display = 'none'));
+
       await new Promise((resolve) => setTimeout(resolve, 300));
 
       const canvas = await html2canvas(element, {
@@ -108,25 +123,10 @@ export default function Dashboard() {
         scale: 2,
         useCORS: true,
         logging: false,
-        onclone: (clonedDoc) => {
-          // Заменяем все цвета формата oklch(...) на HEX
-          clonedDoc.querySelectorAll('*').forEach((el) => {
-            const style = clonedDoc.defaultView?.getComputedStyle(el);
-            if (!style) return;
-
-            if (style.backgroundColor.includes('oklch')) {
-              (el as HTMLElement).style.backgroundColor = '#E0F2FE'; // светло-голубой
-            }
-            if (style.color.includes('oklch')) {
-              (el as HTMLElement).style.color = '#1E3A8A'; // тёмно-синий
-            }
-            if (style.borderColor.includes('oklch')) {
-              (el as HTMLElement).style.borderColor = '#93C5FD'; // голубой бордер
-            }
-          });
-        },
       });
 
+      // Возвращаем кнопки
+      hiddenButtons.forEach((btn) => ((btn as HTMLElement).style.display = ''));
 
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF({ unit: 'pt', format: 'a4' });
@@ -138,7 +138,7 @@ export default function Dashboard() {
       let position = 0;
       pdf.addImage(imgData, 'PNG', 0, position, pageWidth, imgHeight);
 
-      // Разбиваем на страницы, если контент превышает одну страницу
+      // Добавляем страницы, если нужно
       if (imgHeight > pageHeight) {
         let y = imgHeight;
         while (y > pageHeight) {
@@ -152,9 +152,11 @@ export default function Dashboard() {
       console.log("✅ PDF успешно сохранён");
     } catch (error) {
       console.error("❌ Ошибка при экспорте PDF:", error);
+      alert("Ошибка при экспорте PDF. Попробуй обновить страницу.");
     }
   };
 
+  // === Подготовка данных для графика ===
   const chartData = history
     .slice()
     .reverse()
@@ -217,6 +219,7 @@ export default function Dashboard() {
           </div>
         )}
 
+        {/* Результаты и история */}
         {latest ? (
           <>
             <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 text-gray-700">
@@ -266,8 +269,7 @@ export default function Dashboard() {
         ) : (
           <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6 text-gray-700 text-center">
             <p className="text-base">
-              Нет сохранённых результатов. Пройди тест, чтобы увидеть рекомендации и начать
-              отслеживать прогресс.
+              Нет сохранённых результатов. Пройди тест, чтобы увидеть рекомендации и начать отслеживать прогресс.
             </p>
             <button
               onClick={() => router.push('/quiz')}
