@@ -91,21 +91,43 @@ export default function Dashboard() {
   };
 
   // === Экспорт отчёта в PDF ===
-  const handleExportPDF = async () => {
-    console.log("🚀 Экспорт PDF запущен");
-    const element = document.getElementById('report-section');
-    if (!element) {
-      console.warn("⚠️ Элемент #report-section не найден");
+const handleExportPDF = async () => {
+  console.log("🚀 Экспорт PDF запущен");
+  const element = document.getElementById('report-section');
+
+  if (!element) {
+    console.warn("⚠️ Элемент #report-section не найден");
     return;
-    }
-    const canvas = await html2canvas(element);
+  }
+
+  try {
+    // 🩵 Основная защита от ошибки "unsupported color function 'oklch'"
+    const canvas = await html2canvas(element, {
+      backgroundColor: '#ffffff', // Устанавливаем белый фон (иначе прозрачный)
+      scale: 2, // Повышаем чёткость PDF
+      useCORS: true, // Разрешаем кросс-доменные ресурсы
+      ignoreElements: (el) => {
+        const style = window.getComputedStyle(el);
+        return style.backgroundColor.includes('oklch'); // Пропускаем элементы с новыми цветовыми функциями
+      },
+    });
+
     const imgData = canvas.toDataURL('image/png');
     const pdf = new jsPDF({ unit: 'pt', format: 'a4' });
+
     const pageWidth = pdf.internal.pageSize.getWidth();
     const ratio = pageWidth / canvas.width;
-    pdf.addImage(imgData, 'PNG', 0, 20, pageWidth, canvas.height * ratio);
+    const pageHeight = canvas.height * ratio;
+
+    pdf.addImage(imgData, 'PNG', 0, 20, pageWidth, pageHeight);
     pdf.save('digital_focus_report.pdf');
-  };
+
+    console.log("✅ PDF успешно сохранён");
+  } catch (error) {
+    console.error("❌ Ошибка при экспорте PDF:", error);
+  }
+};
+
 
   // === Данные для графика ===
   const chartData = history
