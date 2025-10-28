@@ -91,45 +91,54 @@ export default function Dashboard() {
   };
 
   // === Экспорт отчёта в PDF ===
-const handleExportPDF = async () => {
-  console.log("🚀 Экспорт PDF запущен");
-  const element = document.getElementById('report-section');
+  const handleExportPDF = async () => {
+    console.log("🚀 Экспорт PDF запущен");
+    const element = document.getElementById('report-section');
 
-  if (!element) {
-    console.warn("⚠️ Элемент #report-section не найден");
-    return;
-  }
+    if (!element) {
+      console.warn("⚠️ Элемент #report-section не найден");
+      return;
+    }
 
-  try {
-    // 🩵 Основная защита от ошибки "unsupported color function 'oklch'"
-    const canvas = await html2canvas(element, {
-      backgroundColor: '#ffffff', // Устанавливаем белый фон (иначе прозрачный)
-      scale: 2, // Повышаем чёткость PDF
-      useCORS: true, // Разрешаем кросс-доменные ресурсы
-      ignoreElements: (el) => {
-        const style = window.getComputedStyle(el);
-        return style.backgroundColor.includes('oklch'); // Пропускаем элементы с новыми цветовыми функциями
-      },
-    });
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 300));
 
-    const imgData = canvas.toDataURL('image/png');
-    const pdf = new jsPDF({ unit: 'pt', format: 'a4' });
+      const canvas = await html2canvas(element, {
+        backgroundColor: '#ffffff',
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        ignoreElements: (el) =>
+          el.tagName === 'BUTTON' || el.classList.contains('no-export'),
+      });
 
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const ratio = pageWidth / canvas.width;
-    const pageHeight = canvas.height * ratio;
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({ unit: 'pt', format: 'a4' });
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const ratio = pageWidth / canvas.width;
+      const imgHeight = canvas.height * ratio;
 
-    pdf.addImage(imgData, 'PNG', 0, 20, pageWidth, pageHeight);
-    pdf.save('digital_focus_report.pdf');
+      let position = 0;
+      pdf.addImage(imgData, 'PNG', 0, position, pageWidth, imgHeight);
 
-    console.log("✅ PDF успешно сохранён");
-  } catch (error) {
-    console.error("❌ Ошибка при экспорте PDF:", error);
-  }
-};
+      // Разбиваем на страницы, если контент превышает одну страницу
+      if (imgHeight > pageHeight) {
+        let y = imgHeight;
+        while (y > pageHeight) {
+          pdf.addPage();
+          pdf.addImage(imgData, 'PNG', 0, -pageHeight, pageWidth, imgHeight);
+          y -= pageHeight;
+        }
+      }
 
+      pdf.save('digital_focus_report.pdf');
+      console.log("✅ PDF успешно сохранён");
+    } catch (error) {
+      console.error("❌ Ошибка при экспорте PDF:", error);
+    }
+  };
 
-  // === Данные для графика ===
   const chartData = history
     .slice()
     .reverse()
@@ -140,10 +149,13 @@ const handleExportPDF = async () => {
 
   return (
     <main className="bg-sky-100 min-h-screen flex items-center justify-center p-6">
-      <div className="bg-white rounded-3xl shadow-xl p-8 w-full max-w-3xl space-y-6">
+      <div
+        id="report-section"
+        className="bg-white rounded-3xl shadow-xl p-8 w-full max-w-3xl space-y-6"
+      >
         <h1 className="text-3xl font-bold text-gray-800 text-center">Личный кабинет</h1>
 
-        {/* Инфо о пользователе */}
+        {/* Информация о пользователе */}
         {session && (
           <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm text-gray-600 space-y-2">
             <div className="flex items-center gap-2">
@@ -191,10 +203,7 @@ const handleExportPDF = async () => {
 
         {latest ? (
           <>
-            <div
-              id="report-section"
-              className="bg-blue-50 border border-blue-200 rounded-xl p-6 text-gray-700"
-            >
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 text-gray-700">
               <p className="text-xl font-semibold">
                 Последний результат:{' '}
                 <span className="text-blue-600">{latest.score}</span>
@@ -216,7 +225,8 @@ const handleExportPDF = async () => {
               )}
             </div>
 
-            <div className="flex flex-col sm:flex-row sm:justify-between gap-4">
+            {/* Кнопки управления */}
+            <div className="flex flex-col sm:flex-row sm:justify-between gap-4 no-export">
               <button
                 onClick={handleExportPDF}
                 className="border border-blue-600 text-blue-600 hover:bg-blue-50 py-3 px-6 rounded-lg font-medium transition"
