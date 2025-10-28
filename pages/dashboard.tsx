@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { supabase } from '@/utils/supabaseClient';
 import { Session } from '@supabase/supabase-js';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
 type TestResult = {
   score: number;
@@ -15,7 +18,6 @@ export default function Dashboard() {
   const [name, setName] = useState('');
   const [editingName, setEditingName] = useState(false);
 
-
   useEffect(() => {
     const getSession = async () => {
       const {
@@ -25,11 +27,10 @@ export default function Dashboard() {
 
       if (session?.user?.user_metadata?.name) {
         setName(session.user.user_metadata.name);
-    }
-
+      }
 
       if (!session) {
-        router.push('/auth/signin')
+        router.push('/auth/signin');
       }
     };
 
@@ -74,20 +75,42 @@ export default function Dashboard() {
   }
 
   const handleSaveName = async () => {
-  if (!session) return;
+    if (!session) return;
 
-  const { error } = await supabase.auth.updateUser({
-    data: { name },
-  });
+    const { error } = await supabase.auth.updateUser({
+      data: { name },
+    });
 
-  if (error) {
-    console.error('Ошибка обновления имени:', error.message);
-    alert('Ошибка при сохранении имени.');
-  } else {
-    alert('Имя успешно обновлено!');
-    setEditingName(false);
-  }
+    if (error) {
+      console.error('Ошибка обновления имени:', error.message);
+      alert('Ошибка при сохранении имени.');
+    } else {
+      alert('Имя успешно обновлено!');
+      setEditingName(false);
+    }
   };
+
+  // === Экспорт отчёта в PDF ===
+  const handleExportPDF = async () => {
+    const element = document.getElementById('report-section');
+    if (!element) return;
+    const canvas = await html2canvas(element);
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF({ unit: 'pt', format: 'a4' });
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const ratio = pageWidth / canvas.width;
+    pdf.addImage(imgData, 'PNG', 0, 20, pageWidth, canvas.height * ratio);
+    pdf.save('digital_focus_report.pdf');
+  };
+
+  // === Данные для графика ===
+  const chartData = history
+    .slice()
+    .reverse()
+    .map((item) => ({
+      date: new Date(item.date).toLocaleDateString(),
+      score: item.score,
+    }));
 
   return (
     <main className="bg-sky-100 min-h-screen flex items-center justify-center p-6">
@@ -97,73 +120,83 @@ export default function Dashboard() {
         {/* Инфо о пользователе */}
         {session && (
           <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm text-gray-600 space-y-2">
-  <div className="flex items-center gap-2">
-    <strong>Имя:</strong>
-    {editingName ? (
-      <>
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="border px-2 py-1 rounded text-sm"
-        />
-        <button
-          onClick={handleSaveName}
-          className="text-blue-600 hover:underline text-sm"
-        >
-          Сохранить
-        </button>
-        <button
-          onClick={() => {
-            setName(session?.user.user_metadata?.name || '');
-            setEditingName(false);
-          }}
-          className="text-gray-500 hover:underline text-sm"
-        >
-          Отмена
-        </button>
-      </>
-    ) : (
-      <>
-        <span>{name || 'Пользователь'}</span>
-        <button
-          onClick={() => setEditingName(true)}
-          className="text-blue-600 hover:underline text-sm"
-        >
-          ✏️ Изменить
-        </button>
-      </>
-    )}
-    </div>
-      <p>
-        <strong>Email:</strong> {session?.user.email}
-      </p>
-    </div>
-
+            <div className="flex items-center gap-2">
+              <strong>Имя:</strong>
+              {editingName ? (
+                <>
+                  <input
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="border px-2 py-1 rounded text-sm"
+                  />
+                  <button
+                    onClick={handleSaveName}
+                    className="text-blue-600 hover:underline text-sm"
+                  >
+                    Сохранить
+                  </button>
+                  <button
+                    onClick={() => {
+                      setName(session?.user.user_metadata?.name || '');
+                      setEditingName(false);
+                    }}
+                    className="text-gray-500 hover:underline text-sm"
+                  >
+                    Отмена
+                  </button>
+                </>
+              ) : (
+                <>
+                  <span>{name || 'Пользователь'}</span>
+                  <button
+                    onClick={() => setEditingName(true)}
+                    className="text-blue-600 hover:underline text-sm"
+                  >
+                    ✏️ Изменить
+                  </button>
+                </>
+              )}
+            </div>
+            <p>
+              <strong>Email:</strong> {session?.user.email}
+            </p>
+          </div>
         )}
 
         {latest ? (
           <>
-            <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 text-gray-700">
+            <div
+              id="report-section"
+              className="bg-blue-50 border border-blue-200 rounded-xl p-6 text-gray-700"
+            >
               <p className="text-xl font-semibold">
-                Последний результат: <span className="text-blue-600">{latest.score}</span>
+                Последний результат:{' '}
+                <span className="text-blue-600">{latest.score}</span>
               </p>
               <p className="mt-2 text-base">{message}</p>
+
+              {history.length > 1 && (
+                <div className="mt-6">
+                  <h3 className="font-medium mb-2">История результатов</h3>
+                  <ResponsiveContainer width="100%" height={250}>
+                    <LineChart data={chartData}>
+                      <XAxis dataKey="date" />
+                      <YAxis />
+                      <Tooltip />
+                      <Line type="monotone" dataKey="score" stroke="#2563eb" />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
             </div>
 
-            {history.length > 1 && (
-              <div className="bg-yellow-50 border border-yellow-200 text-gray-800 rounded-xl p-6">
-                <p className="text-gray-800 font-medium mb-2">История прохождения:</p>
-                <ul className="text-sm text-gray-600 list-disc list-inside space-y-1">
-                  {history.slice(1).map((item, i) => (
-                    <li key={i}>
-                      {new Date(item.date).toLocaleDateString()} — балл: {item.score}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
             <div className="flex flex-col sm:flex-row sm:justify-between gap-4">
+              <button
+                onClick={handleExportPDF}
+                className="border border-blue-600 text-blue-600 hover:bg-blue-50 py-3 px-6 rounded-lg font-medium transition"
+              >
+                📄 Экспортировать в PDF
+              </button>
               <button
                 onClick={() => router.push(`/recommendations?score=${latest.score}`)}
                 className="bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg font-medium transition"
@@ -181,7 +214,8 @@ export default function Dashboard() {
         ) : (
           <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6 text-gray-700 text-center">
             <p className="text-base">
-              Нет сохранённых результатов. Пройди тест, чтобы увидеть рекомендации и начать отслеживать прогресс.
+              Нет сохранённых результатов. Пройди тест, чтобы увидеть рекомендации и начать
+              отслеживать прогресс.
             </p>
             <button
               onClick={() => router.push('/quiz')}
