@@ -108,9 +108,25 @@ export default function Dashboard() {
         scale: 2,
         useCORS: true,
         logging: false,
-        ignoreElements: (el) =>
-          el.tagName === 'BUTTON' || el.classList.contains('no-export'),
+        onclone: (clonedDoc) => {
+          // Заменяем все цвета формата oklch(...) на HEX
+          clonedDoc.querySelectorAll('*').forEach((el) => {
+            const style = clonedDoc.defaultView?.getComputedStyle(el);
+            if (!style) return;
+
+            if (style.backgroundColor.includes('oklch')) {
+              (el as HTMLElement).style.backgroundColor = '#E0F2FE'; // светло-голубой
+            }
+            if (style.color.includes('oklch')) {
+              (el as HTMLElement).style.color = '#1E3A8A'; // тёмно-синий
+            }
+            if (style.borderColor.includes('oklch')) {
+              (el as HTMLElement).style.borderColor = '#93C5FD'; // голубой бордер
+            }
+          });
+        },
       });
+
 
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF({ unit: 'pt', format: 'a4' });
