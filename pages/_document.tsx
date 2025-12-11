@@ -4,7 +4,7 @@ export default function Document() {
   return (
     <Html lang="ru">
       <Head>
-        {/* Yandex.Metrika counter */}
+        {/* Yandex.Metrika */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
@@ -12,7 +12,7 @@ export default function Document() {
                   m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
                   m[i].l=1*new Date();
                   for (var j = 0; j < document.scripts.length; j++) {
-                      if (document.scripts[j].src === r) return;
+                    if (document.scripts[j].src === r) { return; }
                   }
                   k = e.createElement(t);
                   a = e.getElementsByTagName(t)[0];
@@ -22,15 +22,21 @@ export default function Document() {
               })(window, document, "script", "https://mc.yandex.ru/metrika/tag.js", "ym");
 
               ym(105801042, "init", {
-                webvisor: true,
-                clickmap: true,
-                trackLinks: true,
-                accurateTrackBounce: true
+                clickmap:true,
+                trackLinks:true,
+                accurateTrackBounce:true,
+                webvisor:true
               });
             `,
           }}
         />
+      </Head>
 
+      <body className="antialiased">
+        <Main />
+        <NextScript />
+
+        {/* Yandex.Metrika noscript */}
         <noscript>
           <div>
             <img
@@ -40,12 +46,6 @@ export default function Document() {
             />
           </div>
         </noscript>
-        {/* /Yandex.Metrika counter */}
-      </Head>
-
-      <body className="antialiased">
-        <Main />
-        <NextScript />
       </body>
     </Html>
   );
