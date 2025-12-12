@@ -1,5 +1,6 @@
 import { useRouter } from "next/router";
 import { Geist, Geist_Mono } from "next/font/google";
+import { trackEvent } from "@/utils/analytics";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -42,13 +43,19 @@ export default function Home() {
 
         <div className="flex flex-col sm:flex-row justify-center gap-4 pt-6">
           <button
-            onClick={() => router.push('/quiz')}
+            onClick={() => {
+              trackEvent("quiz_start");
+              router.push("/quiz");
+          }}
             className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-8 rounded-xl text-lg transition cursor-pointer"
           >
             Начать тест
           </button>
           <button
-            onClick={() => router.push('/dashboard')}
+            onClick={() => {
+              trackEvent("dashboard_open");
+              router.push('/dashboard');
+            }}
             className="bg-white border border-blue-500 text-blue-500 hover:bg-blue-50 font-medium py-3 px-8 rounded-xl text-lg transition cursor-pointer"
           >
             Личный кабинет
