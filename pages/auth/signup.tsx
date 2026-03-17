@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabaseClient';
 import { useRouter } from 'next/router';
+import { trackEvent } from '@/utils/analytics';
 
 export default function SignUp() {
   const [email, setEmail] = useState('');
@@ -27,8 +28,11 @@ export default function SignUp() {
   });
 
 
-    if (error) setError(error.message);
-    else {
+    if (error) {
+      trackEvent('sign_up_error');
+      setError(error.message);
+    } else {
+      trackEvent('sign_up_success');
       alert('Письмо с подтверждением отправлено. Проверь почту и затем войди.');
       router.push('/auth/signin');
     }

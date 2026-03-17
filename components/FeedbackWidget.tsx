@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { trackEvent } from '@/utils/analytics';
 
 export default function FeedbackWidget() {
   const [open, setOpen] = useState(false);
@@ -26,6 +27,7 @@ export default function FeedbackWidget() {
             <form
               action="https://formsubmit.co/el/vovabe"
               method="POST"
+              onSubmit={() => trackEvent('feedback_submit')}
             >
               <input type="hidden" name="_captcha" value="false" />
               <textarea

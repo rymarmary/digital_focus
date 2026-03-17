@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabaseClient';
 import { useRouter } from 'next/router';
+import { trackEvent } from '@/utils/analytics';
 
 export default function SignIn() {
   const [email, setEmail] = useState('');
@@ -18,8 +19,13 @@ export default function SignIn() {
     e.preventDefault();
     setError('');
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) setError(error.message);
-    else router.push('/dashboard');
+    if (error) {
+      trackEvent('sign_in_error');
+      setError(error.message);
+    } else {
+      trackEvent('sign_in_success');
+      router.push('/dashboard');
+    }
   };
 
   if (loading) {

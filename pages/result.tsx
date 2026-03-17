@@ -2,6 +2,7 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/utils/supabaseClient';
 import { Session } from '@supabase/supabase-js';
+import { trackEvent } from '@/utils/analytics';
 
 export default function ResultPage() {
   const router = useRouter();
@@ -21,6 +22,12 @@ export default function ResultPage() {
       setSession(data.session);
     });
   }, []);
+
+  useEffect(() => {
+    if (score !== null) {
+      trackEvent('result_view', { score });
+    }
+  }, [score]);
 
   if (score === null) return null;
 
@@ -57,6 +64,7 @@ export default function ResultPage() {
   };
 
   const handleGoToRecommendations = () => {
+    trackEvent('recommendations_open_from_result', { score });
     router.push(`/recommendations?score=${score}`);
   };
 

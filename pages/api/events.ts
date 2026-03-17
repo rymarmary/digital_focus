@@ -16,6 +16,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (!body?.event) return res.status(400).json({ ok: false, error: "event_required" });
 
+    console.log("[events] incoming:", body.event, body.params ?? {});
+
     const row = {
       // важное: ts ставим на сервере
       ts: new Date().toISOString().replace("Z", ""),
@@ -33,7 +35,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const table = process.env.CLICKHOUSE_TABLE ?? "events_raw";
 
     if (!host || !user || !pass) {
-      return res.status(500).json({ ok: false, error: "clickhouse_env_missing" });
+      console.error("[events] ClickHouse env missing (CLICKHOUSE_HOST / USER / PASSWORD)");
+      return res.status(200).json({ ok: false, error: "clickhouse_env_missing" });
     }
 
     const query = `INSERT INTO ${db}.${table} FORMAT JSONEachRow`;
@@ -49,11 +52,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (!r.ok) {
       const text = await r.text();
-      return res.status(502).json({ ok: false, error: "clickhouse_insert_failed", details: text.slice(0, 500) });
+      console.error("[events] ClickHouse insert failed:", text.slice(0, 500));
+      return res.status(200).json({ ok: false, error: "clickhouse_insert_failed" });
     }
 
     return res.status(200).json({ ok: true });
   } catch (e: any) {
-    return res.status(500).json({ ok: false, error: "server_error", details: String(e?.message ?? e) });
+    console.error("[events] Unexpected error:", String(e?.message ?? e));
+    return res.status(200).json({ ok: false, error: "server_error" });
   }
 }

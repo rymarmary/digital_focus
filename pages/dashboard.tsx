@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { supabase } from '@/utils/supabaseClient';
+import { trackEvent } from '@/utils/analytics';
 import { Session } from '@supabase/supabase-js';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -33,6 +34,12 @@ export default function Dashboard() {
     };
     getSession();
   }, [router]);
+
+  useEffect(() => {
+    if (session) {
+      trackEvent('dashboard_view');
+    }
+  }, [session]);
 
   // === Загрузка истории результатов ===
   useEffect(() => {
@@ -149,6 +156,7 @@ export default function Dashboard() {
       }
 
       pdf.save('digital_focus_report.pdf');
+      trackEvent('pdf_export');
       console.log("✅ PDF успешно сохранён");
     } catch (error) {
       console.error("❌ Ошибка при экспорте PDF:", error);
@@ -253,7 +261,7 @@ export default function Dashboard() {
                 📄 Экспортировать в PDF
               </button>
               <button
-                onClick={() => router.push(`/recommendations?score=${latest.score}`)}
+                onClick={() => { trackEvent('recommendations_open_from_dashboard', { score: latest.score }); router.push(`/recommendations?score=${latest.score}`); }}
                 className="bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg font-medium transition"
               >
                 📋 Посмотреть рекомендации

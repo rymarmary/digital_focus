@@ -1,5 +1,6 @@
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
+import { trackEvent } from '@/utils/analytics';
 
 export default function RecommendationsPage() {
   const router = useRouter();
@@ -11,6 +12,12 @@ export default function RecommendationsPage() {
       setScore(parsed);
     }
   }, [router.query.score]);
+
+  useEffect(() => {
+    if (score !== null) {
+      trackEvent('recommendations_view', { score });
+    }
+  }, [score]);
 
   if (score === null) return null;
 
