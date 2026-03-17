@@ -26,6 +26,17 @@ function getPage(): string {
   return window.location.pathname + window.location.search;
 }
 
+// ===== анонимный ID через localStorage =====
+function getUserId(): string {
+  if (typeof localStorage === "undefined") return "server";
+  const key = "df_anon_id";
+  const existing = localStorage.getItem(key);
+  if (existing) return existing;
+  const id = crypto.randomUUID();
+  localStorage.setItem(key, id);
+  return id;
+}
+
 // ===== кеш user_id =====
 let cachedUserId: string | null = null;
 let authListenerStarted = false;
@@ -87,7 +98,7 @@ export async function trackEvent(event: string, params: Record<string, unknown> 
     event,
     page,
     uid,
-    user_id: cachedUserId, // null для гостей
+    user_id: cachedUserId ?? getUserId(),
     params,
   });
 }
