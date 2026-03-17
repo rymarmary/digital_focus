@@ -1,7 +1,8 @@
 import React from 'react';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import { trackEvent } from '@/utils/analytics';
 
 type Question = {
   id: number;
@@ -92,6 +93,10 @@ export default function QuizPage() {
 
   const q = questions[currentQuestion];
 
+  useEffect(() => {
+    trackEvent('quiz_start');
+  }, []);
+
   const handleNext = () => {
     if (selected === null) return;
     const newScore = totalScore + q.options[selected].score;
@@ -101,6 +106,7 @@ export default function QuizPage() {
       setSelected(null);
       setCurrentQuestion(currentQuestion + 1);
     } else {
+      trackEvent('quiz_complete', { score: newScore });
       router.push(`/result?score=${newScore}`);
     }
   };
@@ -128,7 +134,7 @@ export default function QuizPage() {
                 : 'bg-white hover:bg-blue-200 border-blue-200 text-gray-800'
 
             }`}
-              onClick={() => setSelected(idx)}
+              onClick={() => { setSelected(idx); trackEvent('quiz_answer', { question: currentQuestion + 1, score: q.options[idx].score }); }}
             >
               {opt.label}
             </button>

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { format, subDays } from 'date-fns';
 import Link from 'next/link';
 import { supabase } from '@/utils/supabaseClient';
+import { trackEvent } from '@/utils/analytics';
 
 const defaultHabits = [
   'Не брать телефон в руки после 22:00',
@@ -21,6 +22,10 @@ export default function Tracker() {
   const dates = Array.from({ length: 14 }, (_, i) =>
     format(subDays(today, 13 - i), 'dd.MM')
   );
+
+  useEffect(() => {
+    trackEvent('tracker_view');
+  }, []);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -102,6 +107,7 @@ export default function Tracker() {
 
   const toggleProgress = async (habit: string, date: string) => {
     const newValue = !progress[habit]?.[date];
+    trackEvent('habit_toggle', { value: newValue });
 
     setProgress((prev) => ({
       ...prev,
@@ -126,6 +132,7 @@ export default function Tracker() {
     if (habits.includes(trimmed)) return;
 
     setHabits((prev) => [...prev, trimmed]);
+    trackEvent('habit_add');
     setNewHabit('');
     setShowInput(false);
 
@@ -135,6 +142,7 @@ export default function Tracker() {
   };
 
   const handleDeleteHabit = async (habitToDelete: string) => {
+    trackEvent('habit_delete');
     setHabits((prev) => prev.filter((habit) => habit !== habitToDelete));
     setProgress((prev) => {
       const newProgress = { ...prev };
