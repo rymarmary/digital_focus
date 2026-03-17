@@ -22,10 +22,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // важное: ts ставим на сервере
       ts: new Date().toISOString().replace("Z", ""),
       event: body.event,
-      page: body.page ?? null,
+      page_url: body.page ?? null,
       uid: body.uid ?? null,
       user_id: body.user_id ?? null,
-      params: JSON.stringify(body.params ?? {}),
+      params_json: JSON.stringify(body.params ?? {}),
     };
 
     const host = process.env.CLICKHOUSE_HOST; // например: https://<fqdn>:8443
