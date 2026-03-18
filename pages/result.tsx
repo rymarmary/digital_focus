@@ -75,8 +75,28 @@ export default function ResultPage() {
 
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-gray-700">
           <p className="text-lg font-medium">
-            Твой балл: <span className="text-blue-600 font-bold">{score}</span>
+            Твой балл: <span className="text-blue-600 font-bold">{score}</span> <span className="text-gray-400 font-normal text-sm">из 16</span>
           </p>
+
+          {/* Шкала баллов */}
+          <div className="mt-4">
+            <div className="relative h-4 bg-gray-200 rounded-full overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all ${
+                  score <= 5 ? 'bg-green-400' : score <= 10 ? 'bg-yellow-400' : 'bg-red-400'
+                }`}
+                style={{ width: `${(score / 16) * 100}%` }}
+              />
+            </div>
+            <div className="flex justify-between text-xs text-gray-400 mt-1">
+              <span>0</span>
+              <span className={`font-medium ${score <= 5 ? 'text-green-600' : score <= 10 ? 'text-yellow-600' : 'text-red-500'}`}>
+                {score <= 5 ? 'низкая нагрузка' : score <= 10 ? 'умеренная нагрузка' : 'высокая нагрузка'}
+              </span>
+              <span>16</span>
+            </div>
+          </div>
+
           <p className="mt-4 text-base">{message}</p>
         </div>
 
