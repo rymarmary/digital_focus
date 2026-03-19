@@ -7,12 +7,11 @@ export default function SignUp() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [hasSavedQuiz, setHasSavedQuiz] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 200); // предотвратим race condition
-    return () => clearTimeout(timer);
+    setHasSavedQuiz(!!localStorage.getItem('quiz_result'));
   }, []);
 
   const handleSignup = async (e: React.FormEvent) => {
@@ -33,18 +32,10 @@ export default function SignUp() {
       setError(error.message);
     } else {
       trackEvent('sign_up_success');
-      alert('Письмо с подтверждением отправлено. Проверь почту и затем войди.');
+      alert('Письмо отправлено! После подтверждения вернитесь на эту вкладку — здесь сохранится ваш результат.');
       router.push('/auth/signin');
     }
   };
-
-  if (loading) {
-    return (
-      <main className="min-h-screen flex items-center justify-center bg-sky-100">
-        <p className="text-gray-500 text-center text-sm">Загрузка...</p>
-      </main>
-    );
-  }
 
   return (
     <main className="min-h-screen flex justify-center items-center bg-sky-100">
@@ -54,6 +45,12 @@ export default function SignUp() {
         <p className="text-sm text-gray-600 text-center">
           Введите email и пароль, затем подтвердите email по ссылке на почте. После этого вы сможете войти.
         </p>
+
+        {hasSavedQuiz && (
+          <p className="text-sm text-blue-700 bg-blue-50 border border-blue-200 rounded p-3 text-center">
+            После подтверждения почты вернитесь на эту вкладку — здесь сохранится ваш результат.
+          </p>
+        )}
 
         {error && <p className="text-red-500 text-sm text-center">{error}</p>}
 
