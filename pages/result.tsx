@@ -40,7 +40,7 @@ export default function ResultPage() {
 
   const handleSaveAndGoToDashboard = async () => {
     if (!session?.user) {
-      alert('Сначала войдите в аккаунт, чтобы сохранить результат');
+      localStorage.setItem('quiz_result', String(score));
       router.push('/auth/signin');
       return;
     }
@@ -59,6 +59,7 @@ export default function ResultPage() {
       console.error('Ошибка при сохранении:', error.message);
       alert('Не удалось сохранить результат. Попробуйте позже.');
     } else {
+      localStorage.removeItem('quiz_result');
       router.push('/dashboard');
     }
   };

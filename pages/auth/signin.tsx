@@ -8,10 +8,12 @@ export default function SignIn() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [hasSavedQuiz, setHasSavedQuiz] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 200); // предотвращает серость из-за автозаполнения
+    setHasSavedQuiz(!!localStorage.getItem('quiz_result'));
     return () => clearTimeout(timer);
   }, []);
 
@@ -24,7 +26,12 @@ export default function SignIn() {
       setError(error.message);
     } else {
       trackEvent('sign_in_success');
-      router.push('/dashboard');
+      const savedScore = localStorage.getItem('quiz_result');
+      if (savedScore) {
+        router.push(`/result?score=${savedScore}`);
+      } else {
+        router.push('/dashboard');
+      }
     }
   };
 
@@ -40,6 +47,12 @@ export default function SignIn() {
     <main className="min-h-screen flex justify-center items-center bg-sky-100">
       <form onSubmit={handleLogin} className="bg-white p-6 rounded-lg shadow-md space-y-4 w-full max-w-md">
         <h1 className="text-xl font-bold text-center text-gray-800">Вход</h1>
+
+        {hasSavedQuiz && (
+          <p className="text-sm text-blue-700 bg-blue-50 border border-blue-200 rounded p-3 text-center">
+            После подтверждения почты вернитесь на эту вкладку — здесь сохранится ваш результат.
+          </p>
+        )}
 
         {error && <p className="text-red-500 text-sm text-center">{error}</p>}
 
