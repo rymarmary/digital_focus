@@ -126,7 +126,7 @@ export default function Tracker() {
 
   const handleAddHabit = async () => {
     if (!newHabit.trim()) return;
-    const trimmed = newHabit.trim();
+    const trimmed = newHabit.trim().slice(0, 80);
 
     // Предотвращаем дубли
     if (habits.includes(trimmed)) return;
@@ -142,6 +142,7 @@ export default function Tracker() {
   };
 
   const handleDeleteHabit = async (habitToDelete: string) => {
+    if (!window.confirm('Удалить привычку? Это действие нельзя отменить')) return;
     trackEvent('habit_delete');
     setHabits((prev) => prev.filter((habit) => habit !== habitToDelete));
     setProgress((prev) => {
@@ -158,7 +159,7 @@ export default function Tracker() {
 
   return (
     <main className="min-h-screen bg-sky-100 flex flex-col items-center justify-start py-10 px-4">
-      <div className="bg-white rounded-2xl shadow-md p-6 w-full max-w-6xl overflow-x-auto">
+      <div className="bg-white rounded-2xl shadow-md p-6 w-full max-w-6xl">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-semibold text-gray-800">Трекер привычек</h2>
           <Link href="/dashboard" className="text-blue-600 hover:underline text-sm">
@@ -166,14 +167,15 @@ export default function Tracker() {
           </Link>
         </div>
 
+        <div className="overflow-x-auto">
         <table className="min-w-full border-collapse">
           <thead>
             <tr>
-              <th className="sticky left-0 bg-white z-10 px-4 py-2 text-left border-b">Привычка</th>
+              <th className="sticky left-0 bg-white z-10 px-4 py-2 text-left border-b max-w-[200px]">Привычка</th>
               {dates.map((date, index) => (
                 <th
                   key={date}
-                  className={`px-2 py-2 text-sm text-gray-600 border-b whitespace-nowrap ${index >= 7 ? 'hidden sm:table-cell' : ''}`}
+                  className={`px-2 py-2 text-sm text-gray-600 border-b whitespace-nowrap ${index < 7 ? 'hidden sm:table-cell' : ''}`}
                 >
                   {date}
                 </th>
@@ -184,11 +186,11 @@ export default function Tracker() {
           <tbody>
             {habits.map((habit) => (
               <tr key={habit}>
-                <td className="sticky left-0 bg-white z-10 px-4 py-2 border-b font-medium text-gray-800">{habit}</td>
+                <td className="sticky left-0 bg-white z-10 px-4 py-2 border-b font-medium text-gray-800 max-w-[200px] truncate">{habit}</td>
                 {dates.map((date, index) => (
                   <td
                     key={date}
-                    className={`text-center border-b cursor-pointer hover:bg-sky-100 ${index >= 7 ? 'hidden sm:table-cell' : ''}`}
+                    className={`text-center border-b cursor-pointer hover:bg-sky-100 ${index < 7 ? 'hidden sm:table-cell' : ''}`}
                     onClick={() => toggleProgress(habit, date)}
                   >
                     {progress[habit]?.[date] ? '✅' : '⬜'}
@@ -213,6 +215,7 @@ export default function Tracker() {
                       placeholder="Новая привычка"
                       value={newHabit}
                       onChange={(e) => setNewHabit(e.target.value)}
+                      maxLength={80}
                       className="w-full max-w-xs px-2 py-1 border rounded text-sm"
                     />
                     <button
@@ -234,6 +237,7 @@ export default function Tracker() {
             </tr>
           </tbody>
         </table>
+        </div>
       </div>
     </main>
   );
