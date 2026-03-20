@@ -171,7 +171,7 @@ export default function Tracker() {
         <table className="min-w-full border-collapse">
           <thead>
             <tr>
-              <th className="sticky left-0 bg-white z-10 px-4 py-2 text-left border-b max-w-[200px]">Привычка</th>
+              <th className="sticky left-0 bg-white z-10 px-4 py-2 text-left border-b min-w-[220px] max-w-[280px]">Привычка</th>
               {dates.map((date, index) => (
                 <th
                   key={date}
@@ -186,7 +186,7 @@ export default function Tracker() {
           <tbody>
             {habits.map((habit) => (
               <tr key={habit}>
-                <td className="sticky left-0 bg-white z-10 px-4 py-2 border-b font-medium text-gray-800 max-w-[200px] truncate">{habit}</td>
+                <td className="sticky left-0 bg-white z-10 px-4 py-2 border-b font-medium text-gray-800 min-w-[220px] max-w-[280px] truncate" title={habit}>{habit}</td>
                 {dates.map((date, index) => (
                   <td
                     key={date}
