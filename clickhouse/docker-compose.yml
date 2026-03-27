@@ -1,0 +1,24 @@
+services:
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    container_name: digital_focus_clickhouse
+    restart: unless-stopped
+    environment:
+      CLICKHOUSE_DB: analytics
+      CLICKHOUSE_USER: analytics_user
+      CLICKHOUSE_PASSWORD: Df2024!xK9mPqR3z
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+      - clickhouse_logs:/var/log/clickhouse-server
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+
+volumes:
+  clickhouse_data:
+  clickhouse_logs:
