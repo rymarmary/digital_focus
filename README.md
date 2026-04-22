@@ -1,64 +1,63 @@
 # Digital Focus
 
-**Веб-приложение для оценки уровня цифровой нагрузки и формирования осознанных привычек работы с устройствами.**
+**A web application for assessing the level of digital load and building mindful device-usage habits.**
 
-Деплой: [digital-focus.vercel.app](https://digital-focus.vercel.app) · Дипломный проект · Мария Рымарь · 2025–2026
-
----
-
-## Для кого этот продукт
-
-Digital Focus предназначен для людей, которые хотят понять, как много времени и внимания они отдают экранам — и постепенно изменить это. Приложение не требует сложной настройки: пользователь проходит короткий квиз, получает результат с рекомендациями и начинает отслеживать свои привычки в трекере.
-
-Ключевая особенность с технической стороны — встроенная событийная аналитика на базе ClickHouse и Yandex Metrika, позволяющая собирать поведенческие данные пользователей и строить продуктовые метрики без использования внешних SaaS-платформ.
+Deployment: [digital-focus.vercel.app](https://digital-focus.vercel.app) · Graduation project · Maria Rymar · 2025–2026
 
 ---
 
-## Тема диплома
+## Who this product is for
 
-> «Применение событийной аналитики в веб-приложении контроля привычек экранного времени»
+Digital Focus is designed for people who want to understand how much time and attention they give to screens — and gradually change that. The app requires no complex setup: the user takes a short quiz, receives a result with recommendations, and starts tracking their habits in the tracker.
 
-Проект демонстрирует полный цикл работы с событийными данными: от действий пользователя на фронтенде — до записи в аналитическую базу данных и возможности строить воронки, метрики вовлечённости и user journey.
-
----
-
-## Функционал
-
-| Раздел | Описание |
-|--------|----------|
-| **Квиз** | 8 вопросов, бальная система оценки цифровой нагрузки |
-| **Результат** | Итоговый балл, интерпретация, сохранение в личный кабинет |
-| **Рекомендации** | Персонализированные советы по трём уровням нагрузки |
-| **Трекер привычек** | Таблица на 14 дней, добавление и удаление привычек, синхронизация с БД |
-| **Личный кабинет** | История тестов, график изменений, последний результат, редактирование имени |
-| **Экспорт в PDF** | Сохранение отчёта из личного кабинета |
-| **Авторизация** | Регистрация и вход через Supabase, подтверждение email |
-| **Обратная связь** | Форма обратной связи, доступна на любой странице |
+The key technical feature is a built-in event analytics pipeline powered by ClickHouse and Yandex Metrika, which makes it possible to collect behavioral data and build product metrics without relying on external SaaS platforms.
 
 ---
 
-## Технологический стек
+## Thesis topic
 
-| Категория | Технология |
-|-----------|------------|
-| Фреймворк | Next.js 15 (pages router) |
-| Язык | TypeScript |
-| Стили | Tailwind CSS |
-| База данных / Auth | Supabase (PostgreSQL) |
-| Аналитическая БД | ClickHouse |
-| Продуктовая аналитика | Yandex Metrika |
-| Графики | Recharts |
+> "Applying event analytics in a web application for controlling screen-time habits"
+
+The project demonstrates a full cycle of working with event data: from user actions on the frontend — to writing into an analytical database and the ability to build funnels, engagement metrics, and user journeys.
+
+---
+
+## Features
+
+| Section | Description |
+|---------|-------------|
+| **Quiz** | 8 questions, scoring system that evaluates digital load |
+| **Result** | Final score, interpretation, saved to personal account |
+| **Recommendations** | Personalized advice across three load levels |
+| **Habit tracker** | 14-day grid, add/remove habits, synced with the database |
+| **Personal account** | Test history, trend chart, latest result, name editing |
+| **PDF export** | Save a report from the personal account |
+| **Authentication** | Sign-up and sign-in via Supabase with email confirmation |
+| **Feedback** | Feedback form available on any page |
+
+---
+
+## Tech stack
+
+| Category | Technology |
+|----------|------------|
+| Framework | Next.js 15 (pages router) |
+| Language | TypeScript |
+| Styles | Tailwind CSS |
+| Database / Auth | Supabase (PostgreSQL) |
+| Analytical DB | ClickHouse |
+| Product analytics | Yandex Metrika |
+| Charts | Recharts |
 | PDF | jsPDF + html2canvas |
-| Контейнеризация | Docker |
 
 ---
 
-## Архитектура аналитики
+## Analytics architecture
 
 ### Pipeline
 
 ```
-Действие пользователя (клик, просмотр, submit)
+User action (click, view, submit)
        ↓
 trackEvent(event, params) — utils/analytics.ts
        ↓
@@ -73,54 +72,54 @@ ym.reachGoal(event)        POST /api/events
                      ClickHouse HTTP API
                      INSERT INTO analytics.events_raw
                                 ↓
-                     SQL-запросы / аналитика
+                     SQL queries / analytics
 ```
 
-### Как это работает
+### How it works
 
-**1. Фронтенд** (`utils/analytics.ts`) — функция `trackEvent(event, params)`:
-- отправляет событие в Yandex Metrika через `ym.reachGoal`
-- отправляет payload через `navigator.sendBeacon` в API route (надёжно работает даже при закрытии вкладки)
-- автоматически добавляет: `user_id`, `uid` (cookie), `page` (текущий путь)
-- timestamp устанавливается на сервере, не на клиенте
+**1. Frontend** (`utils/analytics.ts`) — the `trackEvent(event, params)` function:
+- sends the event to Yandex Metrika via `ym.reachGoal`
+- sends the payload through `navigator.sendBeacon` to the API route (works reliably even when the tab is closing)
+- automatically adds: `user_id`, `uid` (cookie), `page` (current path)
+- the timestamp is set on the server, not on the client
 
 **2. API route** (`pages/api/events.ts`) — Next.js serverless function:
-- принимает POST-запрос, валидирует наличие `event`
-- формирует строку с серверным `ts` и вставляет в ClickHouse через HTTP API (`FORMAT JSONEachRow`)
-- при недоступном ClickHouse возвращает `200` с флагом ошибки — клиентский flow не прерывается
+- accepts a POST request, validates that `event` is present
+- builds a row with a server-side `ts` and inserts it into ClickHouse via the HTTP API (`FORMAT JSONEachRow`)
+- if ClickHouse is unavailable, returns `200` with an error flag — the client flow is not interrupted
 
 **3. ClickHouse** (`analytics.events_raw`):
-- хранит все события: `ts`, `event`, `page_url`, `uid`, `user_id`, `params_json`
-- выбран как аналитическая БД за колоночное хранение, скорость агрегаций на больших объёмах и нативную поддержку JSON-параметров без схемы
+- stores all events: `ts`, `event`, `page_url`, `uid`, `user_id`, `params_json`
+- chosen as the analytical database for its columnar storage, aggregation speed on large volumes, and native schema-less JSON parameter support
 
 **4. Yandex Metrika**:
-- дублирует все события как цели (`reachGoal`) — позволяет использовать стандартный интерфейс Метрики для быстрого просмотра
-- автоматически фиксирует переходы между страницами (`hit`) через `routeChangeComplete`
+- duplicates all events as goals (`reachGoal`) — enabling the standard Metrika interface for quick browsing
+- automatically records page transitions (`hit`) via `routeChangeComplete`
 
-### Идентификация пользователей
+### User identification
 
-| Тип | Значение `user_id` | Хранение |
-|-----|--------------------|----------|
-| Авторизованный | UUID из Supabase Auth | БД Supabase |
-| Анонимный гость | UUID, сгенерированный при первом визите | `localStorage` (`df_anon_id`) |
+| Type | `user_id` value | Storage |
+|------|-----------------|---------|
+| Authenticated | UUID from Supabase Auth | Supabase database |
+| Anonymous guest | UUID generated on first visit | `localStorage` (`df_anon_id`) |
 
-Анонимный ID создаётся через `crypto.randomUUID()` и сохраняется навсегда — позволяет отслеживать повторные визиты без авторизации.
+The anonymous ID is created via `crypto.randomUUID()` and kept indefinitely — this makes it possible to track repeat visits without authentication.
 
 ---
 
-## Структура проекта
+## Project structure
 
 ```
 digital_focus/
 ├── pages/
-│   ├── index.tsx              # Главная страница
-│   ├── quiz.tsx               # Квиз
-│   ├── result.tsx             # Результат квиза
-│   ├── recommendations.tsx    # Рекомендации
-│   ├── tracker.tsx            # Трекер привычек
-│   ├── dashboard.tsx          # Личный кабинет
-│   ├── _app.tsx               # Глобальный layout, page_view tracking
-│   ├── _document.tsx          # Yandex Metrika скрипт
+│   ├── index.tsx              # Home page
+│   ├── quiz.tsx               # Quiz
+│   ├── result.tsx             # Quiz result
+│   ├── recommendations.tsx    # Recommendations
+│   ├── tracker.tsx            # Habit tracker
+│   ├── dashboard.tsx          # Personal account
+│   ├── _app.tsx               # Global layout, page_view tracking
+│   ├── _document.tsx          # Yandex Metrika script
 │   ├── auth/
 │   │   ├── signin.tsx
 │   │   ├── signup.tsx
@@ -129,68 +128,42 @@ digital_focus/
 │       └── events.ts          # API route → ClickHouse
 ├── components/
 │   ├── AuthGuard.tsx
-│   ├── FeedbackWidget.tsx     # Форма обратной связи
+│   ├── FeedbackWidget.tsx     # Feedback form
 │   └── Footer.tsx
-├── utils/
-│   ├── analytics.ts           # trackEvent, trackPageView, getUserId
-│   └── supabaseClient.ts      # Supabase клиент
-└── clickhouse/
-    └── docker-compose.yml     # ClickHouse для локальной разработки
+└── utils/
+    ├── analytics.ts           # trackEvent, trackPageView, getUserId
+    └── supabaseClient.ts      # Supabase client
 ```
 
 ---
 
-## Запуск локально
+## Running locally
 
-### 1. Установить зависимости
+### 1. Install dependencies
 
 ```bash
 npm install
 ```
 
-### 2. Создать `.env.local`
+### 2. Create `.env.local`
 
 ```bash
-cp .env.example .env.local  # если есть, иначе создать вручную
+cp .env.example .env.local  # if present, otherwise create manually
 ```
 
-Заполнить переменные (см. раздел ниже).
+Fill in the variables (see the section below).
 
-### 3. Запустить dev-сервер
+### 3. Start the dev server
 
 ```bash
 npm run dev
 ```
 
-Приложение доступно на [http://localhost:3000](http://localhost:3000)
+The app is available at [http://localhost:3000](http://localhost:3000).
 
 ---
 
-## ClickHouse через Docker
-
-ClickHouse используется для хранения событий аналитики. Конфигурация находится в `clickhouse/docker-compose.yml`.
-
-### Запуск
-
-```bash
-cd clickhouse
-docker compose up -d
-```
-
-### Проверка
-
-```bash
-# Ping
-curl http://localhost:8123/ping
-# → Ok.
-
-# Проверить базу
-curl -u analytics_user:YOUR_PASSWORD \
-  "http://localhost:8123/?query=SELECT+current_database()"
-# → analytics
-```
-
-### Создание таблицы
+## ClickHouse table schema
 
 ```sql
 CREATE TABLE IF NOT EXISTS analytics.events_raw (
@@ -206,9 +179,9 @@ ORDER BY ts;
 
 ---
 
-## Переменные окружения
+## Environment variables
 
-Создать файл `.env.local` в корне проекта:
+Create a `.env.local` file in the project root:
 
 ```env
 # Supabase
@@ -226,61 +199,61 @@ CLICKHOUSE_DB=analytics
 CLICKHOUSE_TABLE=events_raw
 ```
 
-> `.env.local` не коммитится в репозиторий.
+> `.env.local` is not committed to the repository.
 
 ---
 
-## Ключевые события аналитики
+## Key analytics events
 
-### Квиз
+### Quiz
 
-| Событие | Триггер | Параметры |
-|---------|---------|-----------|
-| `page_view` | Каждый переход между страницами | `url` |
-| `quiz_start` | Открытие страницы квиза | — |
-| `quiz_answer` | Выбор варианта ответа | `question`, `score` |
-| `quiz_complete` | Завершение квиза | `score` |
+| Event | Trigger | Parameters |
+|-------|---------|------------|
+| `page_view` | Every page transition | `url` |
+| `quiz_start` | Opening the quiz page | — |
+| `quiz_answer` | Selecting an answer option | `question`, `score` |
+| `quiz_complete` | Finishing the quiz | `score` |
 
-### Результат и рекомендации
+### Result and recommendations
 
-| Событие | Триггер | Параметры |
-|---------|---------|-----------|
-| `result_view` | Просмотр страницы результата | `score` |
-| `recommendations_view` | Просмотр страницы рекомендаций | `score` |
-| `recommendations_open_from_result` | Переход к рекомендациям со страницы результата | `score` |
-| `recommendations_open_from_dashboard` | Переход к рекомендациям из личного кабинета | `score` |
+| Event | Trigger | Parameters |
+|-------|---------|------------|
+| `result_view` | Viewing the result page | `score` |
+| `recommendations_view` | Viewing the recommendations page | `score` |
+| `recommendations_open_from_result` | Navigating to recommendations from the result page | `score` |
+| `recommendations_open_from_dashboard` | Navigating to recommendations from the personal account | `score` |
 
-### Трекер привычек
+### Habit tracker
 
-| Событие | Триггер | Параметры |
-|---------|---------|-----------|
-| `tracker_view` | Открытие трекера | — |
-| `habit_add` | Добавление новой привычки | — |
-| `habit_toggle` | Отметка выполнения за день | `value` |
-| `habit_delete` | Удаление привычки | — |
+| Event | Trigger | Parameters |
+|-------|---------|------------|
+| `tracker_view` | Opening the tracker | — |
+| `habit_add` | Adding a new habit | — |
+| `habit_toggle` | Marking completion for a day | `value` |
+| `habit_delete` | Deleting a habit | — |
 
-### Личный кабинет
+### Personal account
 
-| Событие | Триггер | Параметры |
-|---------|---------|-----------|
-| `dashboard_open` | Открытие личного кабинета | — |
-| `pdf_export` | Экспорт отчёта в PDF | — |
+| Event | Trigger | Parameters |
+|-------|---------|------------|
+| `dashboard_open` | Opening the personal account | — |
+| `pdf_export` | Exporting the report to PDF | — |
 
-### Авторизация и обратная связь
+### Authentication and feedback
 
-| Событие | Триггер | Параметры |
-|---------|---------|-----------|
-| `sign_in_success` | Успешный вход | — |
-| `sign_in_error` | Ошибка входа | — |
-| `sign_up_success` | Успешная регистрация | — |
-| `sign_up_error` | Ошибка регистрации | — |
-| `feedback_submit` | Отправка формы обратной связи | — |
+| Event | Trigger | Parameters |
+|-------|---------|------------|
+| `sign_in_success` | Successful sign-in | — |
+| `sign_in_error` | Sign-in error | — |
+| `sign_up_success` | Successful sign-up | — |
+| `sign_up_error` | Sign-up error | — |
+| `feedback_submit` | Feedback form submission | — |
 
 ---
 
-## Примеры аналитических запросов
+## Example analytical queries
 
-### Воронка квиза
+### Quiz funnel
 
 ```sql
 SELECT
@@ -292,7 +265,7 @@ FROM analytics.events_raw
 WHERE ts >= now() - INTERVAL 30 DAY;
 ```
 
-### Топ событий за последние 7 дней
+### Top events over the last 7 days
 
 ```sql
 SELECT
@@ -305,7 +278,7 @@ GROUP BY event
 ORDER BY total DESC;
 ```
 
-### Конверсия из гостя в авторизованного пользователя
+### Guest-to-authenticated-user conversion
 
 ```sql
 SELECT
@@ -319,81 +292,79 @@ WHERE ts >= now() - INTERVAL 30 DAY;
 
 ---
 
-## Что можно анализировать
+## What can be analyzed
 
-**Воронка и drop-off**
-- На каком шаге квиза пользователи чаще всего уходят (`quiz_answer` по номеру вопроса)
-- Сколько пользователей доходят от `quiz_start` до `recommendations_view`
-- Где обрывается user journey: результат → рекомендации → кабинет → трекер
+**Funnel and drop-off**
+- The quiz step where users most often leave (`quiz_answer` by question number)
+- How many users progress from `quiz_start` to `recommendations_view`
+- Where the user journey breaks: result → recommendations → account → tracker
 
-**Вовлечённость (engagement)**
-- Частота возвращений одного `user_id` — признак того, что трекер используется регулярно
-- Соотношение `habit_toggle` к `tracker_view` — насколько активно пользователи заполняют трекер
-- Количество `habit_add` и `habit_delete` как показатель настройки под себя
+**Engagement**
+- Return frequency for a single `user_id` — a signal that the tracker is being used regularly
+- Ratio of `habit_toggle` to `tracker_view` — how actively users fill in the tracker
+- Volume of `habit_add` and `habit_delete` as a proxy for personalization
 
 **Feature usage**
-- Как часто используется PDF-экспорт (`pdf_export`) — насколько нужна эта фича
-- Сколько пользователей заходят в рекомендации повторно
-- Соотношение авторизованных и анонимных пользователей
+- How often PDF export (`pdf_export`) is used — how much that feature is actually needed
+- How many users revisit recommendations
+- The ratio of authenticated to anonymous users
 
-**Auth-воронка**
-- Конверсия `sign_up_success` / `sign_in_error` — качество onboarding
-- Доля пользователей, которые прошли квиз до регистрации
-
----
-
-## Ограничения и допущения
-
-- **Объём данных** — проект работает с тестовой выборкой пользователей; промышленные нагрузки не тестировались
-- **Retention** — данные собираются в рамках дипломного периода, долгосрочный retention не измеряется
-- **Анонимные пользователи** — UUID в `localStorage` теряется при очистке браузера; кросс-девайсное отслеживание не реализовано
-- **ClickHouse** — для локальной разработки используется Docker-инстанс без репликации и резервного копирования
-- **Yandex Metrika** — события дублируются, но визуализация ограничена стандартным интерфейсом Метрики
+**Auth funnel**
+- Conversion of `sign_up_success` / `sign_in_error` — onboarding quality
+- Share of users who complete the quiz before registering
 
 ---
 
-## Возможные улучшения
+## Limitations and assumptions
 
-- **Сегментация пользователей** — разделение по уровню нагрузки (score), типу устройства, источнику трафика
-- **A/B тесты** — тестирование формулировок рекомендаций или порядка вопросов квиза
-- **ML-рекомендации** — персонализация на основе истории привычек конкретного пользователя
-- **Real-time дашборд** — визуализация событий в Grafana или Metabase поверх ClickHouse
-- **Push-уведомления** — напоминания для пользователей, которые давно не заходили в трекер
-- **Экспорт данных** — CSV/Excel-выгрузка истории для самостоятельного анализа
+- **Data volume** — the project works with a test sample of users; production-scale loads have not been tested
+- **Retention** — data is collected during the thesis period; long-term retention is not measured
+- **Anonymous users** — the `localStorage` UUID is lost when the browser is cleared; cross-device tracking is not implemented
+- **Yandex Metrika** — events are duplicated, but visualization is limited to the standard Metrika interface
 
 ---
 
-## Статус проекта
+## Possible improvements
 
-| Функция | Статус |
+- **User segmentation** — splitting by load level (score), device type, traffic source
+- **A/B tests** — testing the wording of recommendations or the order of quiz questions
+- **ML recommendations** — personalization based on an individual user's habit history
+- **Real-time dashboard** — visualizing events in Grafana or Metabase on top of ClickHouse
+- **Push notifications** — reminders for users who haven't opened the tracker in a while
+- **Data export** — CSV/Excel export of history for independent analysis
+
+---
+
+## Project status
+
+| Feature | Status |
 |---------|--------|
-| Квиз + результат | Готово |
-| Рекомендации | Готово |
-| Трекер привычек | Готово |
-| Личный кабинет + история | Готово |
-| Экспорт в PDF | Готово |
-| Авторизация (Supabase) | Готово |
-| Событийная аналитика (ClickHouse) | Готово |
-| Yandex Metrika | Готово |
-| Анонимные пользователи (localStorage UUID) | Готово |
+| Quiz + result | Done |
+| Recommendations | Done |
+| Habit tracker | Done |
+| Personal account + history | Done |
+| PDF export | Done |
+| Authentication (Supabase) | Done |
+| Event analytics (ClickHouse) | Done |
+| Yandex Metrika | Done |
+| Anonymous users (localStorage UUID) | Done |
 
 ---
 
-## Дипломная ценность
+## Thesis value
 
-Проект решает задачу, актуальную для продуктовой разработки: **как выстроить собственный pipeline событийной аналитики, не зависящий от внешних платформ**.
+The project addresses a problem relevant to product development: **how to build your own event analytics pipeline that does not depend on external platforms**.
 
-Реализовано:
-- Полный pipeline: фронтенд → serverless API → ClickHouse
-- Dual-track трекинг: Yandex Metrika (быстрый просмотр) + собственная БД (raw-данные и произвольные запросы)
-- Идентификация пользователей: авторизованные (Supabase UUID) и анонимные (localStorage UUID)
-- Покрытие аналитикой всех ключевых пользовательских действий (19 событий)
-- Инфраструктура воспроизводима локально через Docker
-- SQL-запросы для воронок, конверсий и feature usage готовы к использованию
+Delivered:
+- Full pipeline: frontend → serverless API → ClickHouse
+- Dual-track tracking: Yandex Metrika (quick browsing) + own database (raw data and ad-hoc queries)
+- User identification: authenticated users (Supabase UUID) and anonymous users (localStorage UUID)
+- Analytics coverage across all key user actions (19 events)
+- Ready-to-use SQL queries for funnels, conversions, and feature usage
 
 ---
 
-## Лицензия
+## License
 
-Проект создан в рамках дипломной работы и предназначен исключительно для образовательных и некоммерческих целей.
-Коммерческое использование, распространение и перепродажа без разрешения автора запрещены.
+The project was created as a graduation thesis and is intended exclusively for educational and non-commercial purposes.
+Commercial use, distribution, and resale without the author's permission are prohibited.
