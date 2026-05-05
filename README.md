@@ -1,8 +1,20 @@
 # Digital Focus
 
-**A web application for assessing the level of digital load and building mindful device-usage habits.**
+> Full-stack web application with a built-in **event analytics pipeline** — frontend tracking → serverless API → ClickHouse → SQL analytics. Demonstrates an end-to-end product analytics flow built without external SaaS dependencies.
 
-Deployment: [digital-focus.vercel.app](https://digital-focus.vercel.app) · Graduation project · Maria Rymar · 2025–2026
+> 🚀 [Live demo](https://digital-focus.vercel.app) · 📅 2025–2026 · 🎓 Graduation thesis project
+
+A web application for assessing digital load and building mindful device-usage habits. The user takes a short quiz, receives personalized recommendations, and tracks habits in a 14-day grid — while every interaction is captured in a custom analytics pipeline.
+
+---
+
+## TL;DR
+
+- **End-to-end analytics pipeline:** frontend `trackEvent()` → `navigator.sendBeacon` → Next.js serverless API → ClickHouse `INSERT` (HTTP, JSONEachRow)
+- **Dual-track tracking:** Yandex Metrika for quick browsing + own ClickHouse for raw data and ad-hoc SQL
+- **Identification:** authenticated users (Supabase UUID) and anonymous guests (localStorage UUID), enabling repeat-visit tracking without sign-up
+- **19 tracked events** across quiz, recommendations, tracker, dashboard, auth, and feedback flows
+- **Pre-built SQL queries** for funnel analysis, top events, and guest-to-user conversion
 
 ---
 
@@ -11,44 +23,6 @@ Deployment: [digital-focus.vercel.app](https://digital-focus.vercel.app) · Grad
 Digital Focus is designed for people who want to understand how much time and attention they give to screens — and gradually change that. The app requires no complex setup: the user takes a short quiz, receives a result with recommendations, and starts tracking their habits in the tracker.
 
 The key technical feature is a built-in event analytics pipeline powered by ClickHouse and Yandex Metrika, which makes it possible to collect behavioral data and build product metrics without relying on external SaaS platforms.
-
----
-
-## Thesis topic
-
-> "Applying event analytics in a web application for controlling screen-time habits"
-
-The project demonstrates a full cycle of working with event data: from user actions on the frontend — to writing into an analytical database and the ability to build funnels, engagement metrics, and user journeys.
-
----
-
-## Features
-
-| Section | Description |
-|---------|-------------|
-| **Quiz** | 8 questions, scoring system that evaluates digital load |
-| **Result** | Final score, interpretation, saved to personal account |
-| **Recommendations** | Personalized advice across three load levels |
-| **Habit tracker** | 14-day grid, add/remove habits, synced with the database |
-| **Personal account** | Test history, trend chart, latest result, name editing |
-| **PDF export** | Save a report from the personal account |
-| **Authentication** | Sign-up and sign-in via Supabase with email confirmation |
-| **Feedback** | Feedback form available on any page |
-
----
-
-## Tech stack
-
-| Category | Technology |
-|----------|------------|
-| Framework | Next.js 15 (pages router) |
-| Language | TypeScript |
-| Styles | Tailwind CSS |
-| Database / Auth | Supabase (PostgreSQL) |
-| Analytical DB | ClickHouse |
-| Product analytics | Yandex Metrika |
-| Charts | Recharts |
-| PDF | jsPDF + html2canvas |
 
 ---
 
@@ -104,6 +78,36 @@ ym.reachGoal(event)        POST /api/events
 | Anonymous guest | UUID generated on first visit | `localStorage` (`df_anon_id`) |
 
 The anonymous ID is created via `crypto.randomUUID()` and kept indefinitely — this makes it possible to track repeat visits without authentication.
+
+---
+
+## Features
+
+| Section | Description |
+|---------|-------------|
+| **Quiz** | 8 questions, scoring system that evaluates digital load |
+| **Result** | Final score, interpretation, saved to personal account |
+| **Recommendations** | Personalized advice across three load levels |
+| **Habit tracker** | 14-day grid, add/remove habits, synced with the database |
+| **Personal account** | Test history, trend chart, latest result, name editing |
+| **PDF export** | Save a report from the personal account |
+| **Authentication** | Sign-up and sign-in via Supabase with email confirmation |
+| **Feedback** | Feedback form available on any page |
+
+---
+
+## Tech stack
+
+| Category | Technology |
+|----------|------------|
+| Framework | Next.js 15 (pages router) |
+| Language | TypeScript |
+| Styles | Tailwind CSS |
+| Database / Auth | Supabase (PostgreSQL) |
+| Analytical DB | ClickHouse |
+| Product analytics | Yandex Metrika |
+| Charts | Recharts |
+| PDF | jsPDF + html2canvas |
 
 ---
 
@@ -361,6 +365,13 @@ Delivered:
 - User identification: authenticated users (Supabase UUID) and anonymous users (localStorage UUID)
 - Analytics coverage across all key user actions (19 events)
 - Ready-to-use SQL queries for funnels, conversions, and feature usage
+
+---
+
+## Author
+
+**Mary Rymar** — Data Analyst, Fraud & Risk Analytics  
+[LinkedIn](https://www.linkedin.com/in/rymarmary) · [GitHub](https://github.com/rymarmary) · [Live demo](https://digital-focus.vercel.app)
 
 ---
 
