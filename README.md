@@ -253,8 +253,8 @@ CLICKHOUSE_TABLE=events_raw
 
 ```sql
 SELECT
-  countIf(event = 'quiz_start')        AS started,
-  countIf(event = 'quiz_complete')     AS completed,
+  countIf(event = 'quiz_start') AS started,
+  countIf(event = 'quiz_complete') AS completed,
   countIf(event = 'recommendations_view') AS saw_recommendations,
   round(countIf(event = 'quiz_complete') / countIf(event = 'quiz_start') * 100, 1) AS completion_rate_pct
 FROM analytics.events_raw
@@ -278,10 +278,10 @@ ORDER BY total DESC;
 
 ```sql
 SELECT
-  countIf(event = 'sign_up_success')                             AS registrations,
-  countIf(event = 'quiz_complete')                               AS quiz_completions,
+  countIf(event = 'sign_up_success') AS registrations,
+  countIf(event = 'quiz_complete') AS quiz_completions,
   round(countIf(event = 'sign_up_success') /
-        countIf(event = 'quiz_complete') * 100, 1)               AS quiz_to_signup_pct
+        countIf(event = 'quiz_complete') * 100, 1) AS quiz_to_signup_pct
 FROM analytics.events_raw
 WHERE ts >= now() - INTERVAL 30 DAY;
 ```
