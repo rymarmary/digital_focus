@@ -18,14 +18,6 @@ A web application for assessing digital load and building mindful device-usage h
 
 ---
 
-## Who this product is for
-
-Digital Focus is designed for people who want to understand how much time and attention they give to screens — and gradually change that. The app requires no complex setup: the user takes a short quiz, receives a result with recommendations, and starts tracking their habits in the tracker.
-
-The key technical feature is a built-in event analytics pipeline powered by ClickHouse and Yandex Metrika, which makes it possible to collect behavioral data and build product metrics without relying on external SaaS platforms.
-
----
-
 ## Analytics architecture
 
 ### Pipeline
@@ -296,7 +288,7 @@ WHERE ts >= now() - INTERVAL 30 DAY;
 
 ---
 
-## What can be analyzed
+## Analytical use cases
 
 **Funnel and drop-off**
 - The quiz step where users most often leave (`quiz_answer` by question number)
@@ -336,35 +328,6 @@ WHERE ts >= now() - INTERVAL 30 DAY;
 - **Real-time dashboard** — visualizing events in Grafana or Metabase on top of ClickHouse
 - **Push notifications** — reminders for users who haven't opened the tracker in a while
 - **Data export** — CSV/Excel export of history for independent analysis
-
----
-
-## Project status
-
-| Feature | Status |
-|---------|--------|
-| Quiz + result | Done |
-| Recommendations | Done |
-| Habit tracker | Done |
-| Personal account + history | Done |
-| PDF export | Done |
-| Authentication (Supabase) | Done |
-| Event analytics (ClickHouse) | Done |
-| Yandex Metrika | Done |
-| Anonymous users (localStorage UUID) | Done |
-
----
-
-## Thesis value
-
-The project addresses a problem relevant to product development: **how to build your own event analytics pipeline that does not depend on external platforms**.
-
-Delivered:
-- Full pipeline: frontend → serverless API → ClickHouse
-- Dual-track tracking: Yandex Metrika (quick browsing) + own database (raw data and ad-hoc queries)
-- User identification: authenticated users (Supabase UUID) and anonymous users (localStorage UUID)
-- Analytics coverage across all key user actions (19 events)
-- Ready-to-use SQL queries for funnels, conversions, and feature usage
 
 ---
 
