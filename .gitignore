@@ -53,3 +53,9 @@ next-env.d.ts
 # Coverage / test output
 coverage/
 .nyc_output/
+
+# Jupyter / Python (analysis)
+.ipynb_checkpoints/
+__pycache__/
+*.pyc
+*.pkl
