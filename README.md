@@ -15,6 +15,7 @@ A web application for assessing digital load and building mindful device-usage h
 - **Identification:** authenticated users (Supabase UUID) and anonymous guests (localStorage UUID), enabling repeat-visit tracking without sign-up
 - **19 tracked events** across quiz, recommendations, tracker, dashboard, auth, and feedback flows
 - **Pre-built SQL queries** for funnel analysis, top events, and guest-to-user conversion
+- **Real-world snapshot:** 1,171 events from 53 unique users over 8 days (March 2026), analyzed end-to-end in a Jupyter notebook — funnel, retention, segmentation, score↔activity correlation (see [Analytics results](#analytics-results))
 
 ---
 
@@ -288,35 +289,86 @@ WHERE ts >= now() - INTERVAL 30 DAY;
 
 ---
 
-## Analytical use cases
+## Analytics results
 
-**Funnel and drop-off**
-- The quiz step where users most often leave (`quiz_answer` by question number)
-- How many users progress from `quiz_start` to `recommendations_view`
-- Where the user journey breaks: result → recommendations → account → tracker
+> Snapshot from analysis of **1,171 events** captured between **2026-03-19 and 2026-03-26** (8 days, real users of the live demo). Full notebook: [`analysis/analysis.ipynb`](analysis/analysis.ipynb).
 
-**Engagement**
-- Return frequency for a single `user_id` — a signal that the tracker is being used regularly
-- Ratio of `habit_toggle` to `tracker_view` — how actively users fill in the tracker
-- Volume of `habit_add` and `habit_delete` as a proxy for personalization
+### Identity stitching: anonymous → registered
 
-**Feature usage**
-- How often PDF export (`pdf_export`) is used — how much that feature is actually needed
-- How many users revisit recommendations
-- The ratio of authenticated to anonymous users
+The same person appears under two IDs across a sign-up — an anonymous `localStorage` UUID before, a Supabase UUID after. The notebook pairs them when the last anonymous event happens within 10 minutes of the first Supabase event, collapsing **57 raw `user_id` → 53 unique `person_id`** and removing double-counting in every downstream metric.
 
-**Auth funnel**
-- Conversion of `sign_up_success` / `sign_in_error` — onboarding quality
-- Share of users who complete the quiz before registering
+### Conversion funnel (by `person_id`)
+
+![Conversion funnel](analysis/funnel_v2.png)
+
+| Step | Users | % of start | % of previous |
+|------|------:|-----------:|--------------:|
+| Site visit | 53 | 100% | — |
+| Quiz start | 27 | 51% | 51% |
+| Quiz complete | 27 | 51% | 100% |
+| Result view | 27 | 51% | 100% |
+| Recommendations view | 24 | 45% | 89% |
+| Sign-up | 7 | 13% | 29% |
+| Tracker open | 6 | 11% | 86% |
+| Habit add | 4 | 7.5% | 67% |
+
+**End-to-end conversion (visit → habit add): 7.5%.** The biggest drop is at sign-up: only **29%** of the people who saw recommendations actually registered. Once registered, **86%** opened the tracker — so activation friction is concentrated at the sign-up gate, not at later steps. **100%** quiz completion among starters indicates the quiz itself is short and engaging enough to finish.
+
+### Key metrics
+
+![Key metrics summary](analysis/metrics_v2.png)
+
+### User segments (mutually exclusive, by deepest funnel step reached)
+
+| Segment | Users | % |
+|---------|------:|--:|
+| Bounce (no `quiz_start`) | 24 | 45% |
+| Completed quiz, did not register | 18 | 34% |
+| Registered, did not open tracker | 5 | 9% |
+| Opened tracker, no habits added | 2 | 4% |
+| Active user (added a habit) | 4 | 8% |
+| **Total** | **53** | **100%** |
+
+### Cohort retention
+
+![Cohort retention heatmap](analysis/retentionpng.png)
+
+| | Returning users | Retention |
+|--|-----:|-----:|
+| Day 1 | 4 / 53 | 7.5% |
+| Day 2 | 3 / 53 | 5.7% |
+| Day 4 | 2 / 53 | 3.8% |
+
+Low retention is expected: the live demo was promoted in short bursts rather than continuously, and the observation window is only 8 days. The cohort heatmap shows the **Mar 19** cohort is the only one with non-trivial Day 2/Day 4 return — every other cohort essentially collapses after Day 1.
+
+### Quiz score distribution
+
+![Quiz score distribution](analysis/distribution.png)
+
+Mean score **10.1 / 14**, median **10**. By digital-load level:
+
+| Level | Range | Users | % |
+|-------|------:|------:|--:|
+| Low load | 0–5 | 1 | 4% |
+| Moderate | 6–10 | 14 | 52% |
+| High | 11–16 | 12 | 44% |
+
+**Pearson correlation between quiz score and post-quiz event count:** r = **−0.21**, p = **0.30**, N = 27. The effect is weak and not statistically significant on this sample — a higher digital-load score does not predict either more or less follow-up engagement.
+
+### Daily activity
+
+![Daily activity by category](analysis/activity.png)
+
+The **2026-03-21** spike accounts for ~40% of the entire dataset; quiz and page-view events dominate, with tracker and recommendations activity trailing throughout the week.
 
 ---
 
 ## Limitations and assumptions
 
-- **Data volume** — the project works with a test sample of users; production-scale loads have not been tested
-- **Retention** — data is collected during the thesis period; long-term retention is not measured
-- **Anonymous users** — the `localStorage` UUID is lost when the browser is cleared; cross-device tracking is not implemented
-- **Yandex Metrika** — events are duplicated, but visualization is limited to the standard Metrika interface
+- **Sample size** — 53 unique users over 8 days; results are directional, not population-level. Production-scale loads have not been tested.
+- **Retention window** — measured up to Day 4 only; long-term retention requires a longer collection period.
+- **Anonymous users** — the `localStorage` UUID is lost when the browser is cleared; cross-device tracking is not implemented. The anon↔registered stitching uses a 10-minute heuristic.
+- **Yandex Metrika** — events are duplicated, but visualization is limited to the standard Metrika interface.
 
 ---
 
